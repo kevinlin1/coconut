@@ -46,7 +46,7 @@
 )
 
 #let reading-list(items, title: none, level: 1) = {
-  if title != none { heading(level: level, title) }
+  if title != none { heading(depth: level, title) }
   list(
     ..items.map(r => {
       badge(if r.required { [Required] } else { [Optional] })
@@ -91,7 +91,7 @@
 // while catching up.
 #let announcements(items, level: 1) = {
   for a in items {
-    heading(level: level, {
+    heading(depth: level, {
       a.at("title", default: [Announcement])
       text(fill: colors.muted, size: 0.85em, [ — #a.date])
     })

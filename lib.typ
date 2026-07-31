@@ -7,7 +7,10 @@
 // matters exists only in one format.
 
 // --- Documents and site structure -----------------------------------------
-#import "src/document.typ": bundle, chrome, page, reset-counters
+#import "src/document.typ": (
+  bundle, chrome, html-shell, page, reader-contents, reader-front-matter,
+  reset-counters,
+)
 #import "src/course.typ": course
 #import "src/config.typ": config, showing-solutions
 #import "src/slug.typ": slugify

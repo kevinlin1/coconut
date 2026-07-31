@@ -7,6 +7,9 @@
 #let store = state("coconut:config", (:))
 
 #let defaults = (
+  // Title of the page currently being rendered. Read by the running header, so
+  // it names the section rather than the whole document in reader mode.
+  title: none,
   // Course identity, shown in headers/footers and by `course-header()`.
   // See `course()` in `lib.typ` for the full set of recognized keys.
   course: (:),
@@ -27,6 +30,10 @@
   fonts: (:),
   // BCP 47 language tag for the document.
   lang: "en",
+  // True when this page is one section of a single-document build rather than
+  // a document of its own. Page numbering runs through, and per-page furniture
+  // (navigation, format switcher) is dropped.
+  single: false,
 )
 
 #let init(..fields) = store.update(defaults + fields.named())

@@ -69,11 +69,11 @@
 // HTML
 // ---------------------------------------------------------------------------
 
-// Typst has no way to write into `<head>` from a bundle document, so the
-// stylesheet is emitted inline at the top of `<body>`. Browsers apply it
-// identically; keeping it inline also means a page saved or emailed on its own
-// still looks and behaves right, which matters for students who download
-// course materials to read offline.
+// Emitted into `<head>` by `html-shell()` in `document.typ`, which supplies the
+// whole `<html>` tree rather than letting Typst generate a scaffold. It stays
+// inline rather than becoming a separate `.css` file so that a page saved or
+// emailed on its own still looks and behaves right — which matters for students
+// who download course materials to read offline.
 //
 // Notable accessibility choices below: focus is always visible, the reading
 // measure is capped near 70 characters, nothing is sized in absolute px so the
@@ -222,7 +222,7 @@ summary {
 .staff-card {
   border: 1px solid var(--line); border-radius: 8px; padding: 0.9rem 1rem; background: var(--surface);
 }
-.staff-card h3 { margin: 0 0 0.15rem; font-size: 1.05rem; }
+.staff-card :is(h2, h3, h4) { margin: 0 0 0.15rem; font-size: 1.05rem; }
 .staff-card .role { color: var(--muted); }
 .staff-card dl { display: grid; grid-template-columns: max-content 1fr; gap: 0.15rem 0.6rem; margin: 0.5rem 0 0; }
 .staff-card dt { font-weight: 600; }

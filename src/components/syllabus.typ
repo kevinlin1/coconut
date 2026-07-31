@@ -64,7 +64,7 @@
   intro: [By the end of this course, you will be able to:],
   level: 1,
 ) = {
-  if title != none { heading(level: level, title) }
+  if title != none { heading(depth: level, title) }
   if intro != none { block(intro) }
   list(..items)
 }
@@ -125,7 +125,7 @@
   if collapse {
     disclosure(title, body)
   } else {
-    heading(level: level, title)
+    heading(depth: level, title)
     body
   }
 }

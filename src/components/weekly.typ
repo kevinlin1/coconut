@@ -191,7 +191,7 @@
   let used = meetings.map(m => m.days).flatten().dedup().sorted()
   for d in used {
     let todays = meetings.filter(m => d in m.days).sorted(key: m => m.start)
-    heading(level: level, day-names.at(d))
+    heading(depth: level, day-names.at(d))
     list(
       ..todays.map(m => {
         strong(if m.url != none { link(m.url, m.title) } else { m.title })

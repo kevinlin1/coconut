@@ -58,7 +58,9 @@
 // so it is meaningful when read out of context in a list of links.
 #let format-switcher() = context {
   let cfg = config()
-  if target() != "html" or cfg.path == none or "pdf" not in cfg.formats { return }
+  if target() != "html" or cfg.single or cfg.path == none or "pdf" not in cfg.formats {
+    return
+  }
   html.p(
     class: "page-meta no-print",
     link(cfg.path + ".pdf", [Download this page as a PDF (opens a PDF file)]),
@@ -119,13 +121,17 @@
 // be identified; the footer carries "Page n of m" in words, not just digits,
 // because a bare number is ambiguous when read aloud.
 #let paged-header() = context {
-  let c = config().course
-  let name = c.at("code", default: c.at("name", default: none))
+  let cfg = config()
+  let name = cfg.course.at("code", default: cfg.course.at("name", default: none))
   set text(size: 0.85em, fill: colors.muted)
   if name == none { return }
+  // The page title comes from the configuration rather than from `title()`,
+  // which in a single-document build would name the whole reader on every
+  // page instead of the section the reader is actually looking at.
+  let page-title = if cfg.title != none { cfg.title } else { title() }
   grid(
     columns: (1fr, auto),
-    align(left, name), align(right, title()),
+    align(left, name), align(right, page-title),
   )
   line(length: 100%, stroke: 0.5pt + colors.line)
 }
@@ -135,6 +141,6 @@
   grid(
     columns: (1fr, auto),
     align(left, site-footer()),
-    align(right, [Page #counter(page).display() of #page-count()]),
+    align(right, [Page #counter(page).display() of #page-count(single: config().single)]),
   )
 }

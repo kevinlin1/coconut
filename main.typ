@@ -344,7 +344,11 @@
 
 // --- The site ---------------------------------------------------------------
 
-#bundle(course: this-course, (
+#bundle(
+  course: this-course,
+  // Only used by the single-document editions (`--format pdf` / `--format html`).
+  title: "INFO 220: Complete Course Reader",
+  (
   (
     title: "Syllabus",
     path: "index",
@@ -388,7 +392,7 @@
 
       = Key dates
 
-      #key-dates((
+      #key-dates(caption: "Dates and deadlines at a glance", (
         (date: [Friday, October 9], what: [Problem set 1 due], notes: [11:59 p.m.]),
         (date: [Wednesday, November 4], what: [Midterm], notes: [In class, 50 minutes]),
         (date: [Friday, November 13], what: [Final project proposal due], notes: []),

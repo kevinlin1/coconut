@@ -11,16 +11,21 @@ ships the components a course actually needs — syllabus, staff directory, term
 schedule, weekly meeting grid, problem sets, exams, readings — with the
 accessibility work already done.
 
+One source file builds three things, chosen by `--format`:
+
 ```sh
+# The website: one HTML page and one PDF per route, into main/
 typst watch main.typ --features bundle,html --format bundle
+
+# The course reader: every page in sequence as one continuous PDF
+typst compile main.typ --features bundle,html --format pdf main/course-reader.pdf
+
+# The same reader as a single long web page
+typst compile main.typ --features bundle,html --format html main/course-reader.html
 ```
 
-That writes `main/index.html`, `main/index.pdf`, `main/schedule.html`, and so
-on. To check the PDFs against the accessibility standard:
-
-```sh
-typst compile main.typ --features bundle,html --format bundle --pdf-standard ua-1
-```
+Add `--pdf-standard ua-1` to any PDF build to have Typst enforce the
+accessibility standard; the example site passes in every shape.
 
 `main.typ` is a complete example course site; `lib.typ` is the public API.
 
@@ -52,9 +57,12 @@ typst compile main.typ --features bundle,html --format bundle --pdf-standard ua-
 ))
 ```
 
-Each route becomes `<path>.html` and `<path>.pdf`. `bundle()` gives every page
-the same course identity and navigation, so the running header on a printed
-problem set can't disagree with the banner on the website.
+Each route becomes `<path>.html` and `<path>.pdf`, or one section of the reader.
+`bundle()` gives every page the same course identity and navigation, so the
+running header on a printed problem set can't disagree with the banner on the
+website. `in-nav: false` keeps a route out of the site navigation; `in-reader:
+false` keeps it out of the reader, which is how you avoid binding an answer key
+into the copy students print.
 
 ## What's in the box
 
@@ -110,9 +118,32 @@ The point of the package is that a component you drop in is already accessible:
 - **MathML.** Typst exports math as MathML on the web, which screen readers
   read structurally.
 
+## One site, three shapes
+
+The website and the reader are the same routes rendered two ways, not two
+pipelines. The switch is `target()`, which reports **`"bundle"`** at the top
+level of a bundle export and `"paged"` or `"html"` when a single document is
+being built — so `page()` either constructs `document()` elements or contributes
+a section to the document already in progress:
+
+```typst
+context if target() == "bundle" {
+  for format in formats { document(base + "." + format, ..) }  // the website
+} else if target() == "paged" and "pdf" in formats {
+  contents(single: true)                                       // one section of the reader
+}
+```
+
+This is the shape Typst's own documentation uses to publish typst.app/docs and
+its standalone reference PDF from one source (see `docs/components/section.typ`
+in the Typst repository, which branches between `html-section` and
+`paged-section` the same way). Reader mode drops the per-page furniture —
+navigation, the "download as PDF" link — lets page numbering run straight
+through, and adds a cover and a table of contents.
+
 ## Working with bundles
 
-Two things about bundle export are worth knowing, because they are the source
+Four things about bundle export are worth knowing, because they are the source
 of most surprises:
 
 1. **Introspection is global.** `counter.final()`, `state.final()`, and a bare
@@ -123,6 +154,13 @@ of most surprises:
    set on the site.
 2. **`set page(..)` and layout functions only exist on the paged target.**
    Anything paged-only belongs behind `context if target() != "html"`.
+3. **A `document()` body can be a whole `html.html(..)` tree.** That is the only
+   way to write into `<head>`, which is where the stylesheet, viewport, and
+   description belong; Typst still injects its MathML styles alongside them.
+4. **`heading(level: ..)` is absolute and ignores `offset`.** Components take a
+   relative level and pass it as `depth:`, so a component heading nests under
+   the page title instead of becoming its sibling. Getting this wrong is
+   invisible in HTML and shows up as a flat PDF outline.
 
 ## License
 

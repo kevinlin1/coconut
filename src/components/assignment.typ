@@ -49,7 +49,7 @@
     }
     let content = {
       [#metadata((number: n, title: title, points: points, tags: tags))#problem-label]
-      heading(level: 1, head)
+      heading(depth: 1, head)
       if tags.len() > 0 {
         block(text(size: 0.9em, fill: colors.muted, [Topics: #tags.join(", ")]))
       }

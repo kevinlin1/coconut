@@ -36,7 +36,12 @@
 // Number of pages in the current PDF document. `counter(page).final()` would
 // report the length of the *last* document in the bundle, so read the counter
 // at this document's end marker instead.
-#let page-count() = {
+//
+// In a single-document build the markers delimit a section rather than a
+// document, and the honest total is the document's own — pass `single: true`
+// (the caller knows, from the configuration) to get it.
+#let page-count(single: false) = {
+  if single { return counter(page).final().first() }
   let after = query(selector(end-marker).after(here(), inclusive: true))
   if after.len() == 0 { counter(page).final().first() } else {
     counter(page).at(after.first().location()).first()

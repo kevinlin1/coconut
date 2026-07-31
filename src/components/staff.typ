@@ -63,12 +63,16 @@
   }
 }
 
+// `level: 1` by default: the cards are the page's main content, so they are
+// its `<h2>`s. Dropping them to `<h3>` would skip a heading level between the
+// page title and its first content heading, which is exactly the structural
+// gap screen-reader users use to navigate.
 #let staff-directory(members, level: 1, columns: 2) = context if target() == "html" {
   html.ul(
     class: "staff-list",
     for p in members {
       html.li(class: "staff-card", {
-        heading(level: level, name-line(p))
+        heading(depth: level, name-line(p))
         if p.role != none { html.p(class: "role", p.role) }
         card-body(p)
       })
@@ -86,7 +90,7 @@
       inset: 0.9em,
       breakable: false,
       {
-        heading(level: level, name-line(p))
+        heading(depth: level, name-line(p))
         if p.role != none { block(text(fill: colors.muted, p.role)) }
         card-body(p)
       },
