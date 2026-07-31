@@ -1,0 +1,9 @@
+# Typst Output Files
+*.html
+*.pdf
+
+# Editor & System Files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
