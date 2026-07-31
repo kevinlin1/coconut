@@ -1,0 +1,16 @@
+[package]
+name = "coconut"
+version = "0.1.0"
+entrypoint = "lib.typ"
+authors = ["Kevin Lin <@kevinlin1>"]
+license = "MIT"
+description = "Course content using Typst."
+repository = "https://github.com/kevinlin1/coconut"
+keywords = ["course", "content", "management"]
+categories = ["components"]
+compiler = "0.15.1"
+
+[template]
+path = "template"
+entrypoint = "main.typ"
+thumbnail = "template/thumbnail.png"
