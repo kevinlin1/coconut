@@ -1,0 +1,131 @@
+#import "theme.typ": colors
+
+// A table that stays a *data* table on both targets.
+//
+// Typst's built-in `table()` already exports a real `<table>` with `<thead>`
+// and `<th>`, but two things that assistive technology depends on have no
+// Typst equivalent: `scope` attributes (which tell a screen reader whether a
+// header labels a row or a column) and `<caption>` (which names the table when
+// it is reached out of context). Row headers matter a lot here — a course
+// schedule is read row by row ("Week 3: ..."), and a weekly grid is read cell
+// by cell ("Tuesday, 10:30 ..."), which only works if both the day column and
+// the time row are marked as headers.
+//
+// So the HTML rendering is emitted by hand, and the paged rendering uses
+// `table()` (whose header row Typst tags for PDF/UA).
+
+// One cell. Callers may pass bare content instead and get the defaults.
+#let cell(
+  body,
+  header: false,
+  scope: none,
+  colspan: 1,
+  rowspan: 1,
+  fill: none,
+  align: auto,
+  class: none,
+) = (
+  coconut-cell: true,
+  body: body,
+  header: header,
+  scope: scope,
+  colspan: colspan,
+  rowspan: rowspan,
+  fill: fill,
+  align: align,
+  class: class,
+)
+
+#let normalize(c) = if type(c) == dictionary and c.at("coconut-cell", default: false) { c } else { cell(c) }
+
+#let paged-cell(c, header: false) = {
+  let c = normalize(c)
+  let body = if c.header or header { strong(c.body) } else { c.body }
+  table.cell(
+    colspan: c.colspan,
+    rowspan: c.rowspan,
+    align: c.align,
+    fill: if c.fill != none { c.fill } else if c.header or header { colors.surface },
+    body,
+  )
+}
+
+#let html-cell(c, default-scope: none) = {
+  let c = normalize(c)
+  let is-header = c.header or c.scope != none or default-scope != none
+  let attrs = (:)
+  if is-header and (c.scope != none or default-scope != none) {
+    attrs.insert("scope", if c.scope != none { c.scope } else { default-scope })
+  }
+  if c.colspan > 1 { attrs.insert("colspan", str(c.colspan)) }
+  if c.rowspan > 1 { attrs.insert("rowspan", str(c.rowspan)) }
+  if c.class != none { attrs.insert("class", c.class) }
+  if c.fill != none { attrs.insert("style", "background-color: " + c.fill.to-hex() + ";") }
+  html.elem(if is-header { "th" } else { "td" }, attrs: attrs, c.body)
+}
+
+// `header` is one row of column headers (or an array of rows for a stacked
+// header). `rows` is an array of rows. When `row-headers` is true the first
+// cell of every body row becomes a `<th scope="row">`.
+#let data-table(
+  columns: auto,
+  header: none,
+  rows: (),
+  caption: none,
+  row-headers: false,
+  // Column alignment, passed through to `table()` on the paged target. Named
+  // `column-align` so it doesn't shadow the built-in `align` function.
+  column-align: left,
+  region-label: none,
+) = {
+  let header-rows = if header == none { () } else if type(header.first()) == array { header } else { (header,) }
+  let width = if columns != auto { columns } else if header-rows.len() > 0 {
+    header-rows.first().len()
+  } else if rows.len() > 0 { rows.first().len() } else { 1 }
+
+  context if target() == "html" {
+    // The scroll wrapper is focusable so a keyboard user can pan a wide
+    // schedule without a pointing device. It only claims `role="region"` when
+    // there is a real name to give it — an unnamed region is worse than none.
+    let attrs = (class: "table-scroll", tabindex: "0")
+    let name = if region-label != none { region-label } else if type(caption) == str { caption }
+    if name != none {
+      attrs.insert("role", "region")
+      attrs.insert("aria-label", name)
+    }
+    html.elem(
+      "div",
+      attrs: attrs,
+      html.table({
+        if caption != none { html.caption(caption) }
+        if header-rows.len() > 0 {
+          html.thead(for row in header-rows {
+            html.tr(for c in row { html-cell(c, default-scope: "col") })
+          })
+        }
+        html.tbody(for row in rows {
+          html.tr(for (i, c) in row.enumerate() {
+            html-cell(c, default-scope: if row-headers and i == 0 { "row" })
+          })
+        })
+      }),
+    )
+  } else {
+    let body = table(
+      columns: width,
+      align: column-align,
+      ..for row in header-rows { (table.header(..row.map(c => paged-cell(c, header: true))),) },
+      ..rows
+        .map(row => row.enumerate().map(((i, c)) => paged-cell(c, header: row-headers and i == 0)))
+        .flatten(),
+    )
+    if caption == none { body } else {
+      // Above the table and flush left, matching where `<caption>` renders in
+      // the HTML.
+      show figure: set align(left)
+      set figure.caption(position: top)
+      show figure.caption: set text(fill: colors.ink, weight: 600, size: 1em)
+      figure(body, caption: caption, kind: table, supplement: none, numbering: none)
+    }
+  }
+}
