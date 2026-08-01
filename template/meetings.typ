@@ -1,8 +1,8 @@
 #import "@preview/coconut:0.1.0": *
 
 // Everything that happens every week: lecture, sections, and office hours. The
-// weekly page renders these three ways — as a grid, as a list, and as office
-// hours alone — from this one array, so the three cannot disagree.
+// weekly page renders these two ways — day by day, and as office hours alone —
+// from this one array, so the two cannot disagree.
 
 #let meetings = (
   meeting(

@@ -8,9 +8,9 @@
 // Typst equivalent: `scope` attributes (which tell a screen reader whether a
 // header labels a row or a column) and `<caption>` (which names the table when
 // it is reached out of context). Row headers matter a lot here — a course
-// schedule is read row by row ("Week 3: ..."), and a weekly grid is read cell
-// by cell ("Tuesday, 10:30 ..."), which only works if both the day column and
-// the time row are marked as headers.
+// schedule is read row by row ("Week 3: ..."), and an office hours table is
+// read cell by cell ("Priya Raman, Thursday, ..."), which only works if the
+// leading column is marked as headers too.
 //
 // So the HTML rendering is emitted by hand, and the paged rendering uses
 // `table()` (whose header row Typst tags for PDF/UA).
@@ -109,7 +109,7 @@
     // are unique per page collide: two assignments each carrying a "Rubric"
     // produce two landmarks with the same name, and the landmark list stops
     // being a way to navigate. Qualify the name with the section it belongs to.
-    // A caption that already names its section ("Weekly schedule" on the Weekly
+    // A caption that already names its section ("Course schedule" on the
     // Schedule page) is left alone rather than doubled.
     let cfg = config.config()
     if name != none and cfg.single and type(cfg.title) == str and lower(cfg.title) not in lower(name) {

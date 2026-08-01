@@ -198,7 +198,6 @@ th, td {
 thead th { background: var(--surface); }
 tbody th { background: var(--surface); font-weight: 600; }
 td.emphasis { background: var(--surface); font-weight: 600; }
-td.empty { background: repeating-linear-gradient(135deg, transparent, transparent 6px, var(--surface) 6px, var(--surface) 12px); }
 
 /* Callouts */
 .callout {

@@ -8,7 +8,7 @@ students print and write on. The two drift apart, and the accessible one is
 usually the one that falls behind. `coconut` uses Typst's experimental
 [bundle export](https://typst.app/docs/) to emit both from the same file, and
 ships the components a course actually needs — syllabus, staff directory, term
-schedule, weekly meeting grid, problem sets, exams, readings — with the
+schedule, weekly meetings, problem sets, exams, readings — with the
 accessibility work already done.
 
 One source file builds three things, chosen by `--format`:
@@ -128,7 +128,7 @@ pin in each of them.
 | Syllabus | `course-header`, `facts`, `learning-objectives`, `grade-breakdown`, `grading-scale`, `key-dates`, `policy` |
 | Policies | `policy-drafts`, `policy-sections` — starter text for accommodations, integrity, generative AI, late work, basic needs |
 | People | `person`, `staff-directory`, `who-to-ask` |
-| Schedules | `course-schedule`, `deadline-list`, `due`, `weekly-schedule`, `weekly-list`, `office-hours`, `meeting` |
+| Schedules | `course-schedule`, `deadline-list`, `due`, `weekly-list`, `office-hours`, `meeting` |
 | Assignments | `problem`, `parts`, `part`, `solution`, `grading-note`, `hint`, `answer-space`, `blank`, `rubric`, `rubric-matrix`, `points-summary`, `submission-checklist` |
 | Exams | `exam-cover`, `exam-instructions`, `multiple-choice`, `true-false`, `matching`, `identity-lines`, `end-of-exam` |
 | Callouts | `callout`, `note`, `tip`, `important`, `warning`, `deadline`, `example`, `activity`, `disclosure` |
@@ -200,7 +200,7 @@ The point of the package is that a component you drop in is already accessible:
   formats have the same outline.
 - **Real data tables.** `data-table()` emits `<caption>` and `scope="col"` /
   `scope="row"` headers, so a schedule cell is announced with both of its
-  coordinates. The weekly grid is a table with `rowspan`, not positioned boxes.
+  coordinates.
 - **Every PDF passes `--pdf-standard ua-1`,** including the example site and
   both editions of every page. Tagged PDF is on by default in Typst;
   `figure-image()` refuses to build without `alt`, and `eq()` attaches the

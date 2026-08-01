@@ -49,9 +49,7 @@
 
 // --- Schedules -------------------------------------------------------------
 #import "src/components/schedule.typ": course-schedule, deadline-list, due
-#import "src/components/weekly.typ": (
-  meeting, office-hours, weekly-list, weekly-schedule,
-)
+#import "src/components/weekly.typ": meeting, office-hours, weekly-list
 
 // --- Assignments and exams -------------------------------------------------
 #import "src/components/assignment.typ": (

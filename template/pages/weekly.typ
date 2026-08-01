@@ -2,8 +2,8 @@
 
 #import "../meetings.typ": meetings
 
-// The recurring week, rendered three ways from one array: a grid, a list, and
-// office hours on their own.
+// The recurring week, rendered two ways from one array: day by day, and office
+// hours on their own.
 
 #let weekly = (
   title: "Weekly Schedule",
@@ -13,11 +13,7 @@
     These meetings happen every week of the term. One-time events — exams,
     deadlines, the field trip — are on the #page-link("Schedule") page.
 
-    #weekly-schedule(meetings)
-
-    = The same schedule as a list
-
-    #weekly-list(meetings)
+    #weekly-list(meetings, level: 1)
 
     = Office hours
 
