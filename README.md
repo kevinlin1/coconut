@@ -14,20 +14,23 @@ accessibility work already done.
 One source file builds three things, chosen by `--format`:
 
 ```sh
-# The website: one HTML page and one PDF per route, into main/
-typst watch main.typ --features bundle,html --format bundle
+# The website: one HTML page and one PDF per route, into site/
+typst watch main.typ --features bundle,html --format bundle site
 
 # The course reader: every page in sequence as one continuous PDF
-typst compile main.typ --features bundle,html --format pdf main/course-reader.pdf
+typst compile main.typ --features bundle,html --format pdf course-reader.pdf
 
 # The same reader as a single long web page
-typst compile main.typ --features bundle,html --format html main/course-reader.html
+typst compile main.typ --features bundle,html --format html course-reader.html
 ```
 
 Add `--pdf-standard ua-1` to any PDF build to have Typst enforce the
 accessibility standard; the example site passes in every shape.
 
-`main.typ` is a complete example course site; `lib.typ` is the public API.
+`template/main.typ` is a complete example course site — it is what `typst init
+@preview/coconut` gives you. `lib.typ` is the public API. To build it from a
+clone of this repository rather than from the published package, see
+[Development](#development).
 
 ## A course site in one file
 
@@ -123,7 +126,46 @@ The point of the package is that a component you drop in is already accessible:
   sizes, visible focus, reduced-motion support, wide tables scrolling inside a
   labelled focusable region, and a print stylesheet.
 - **MathML.** Typst exports math as MathML on the web, which screen readers
-  read structurally.
+  read structurally. In the PDF it is alt text instead — see below.
+
+These are claims, so CI checks them — see [Development](#development).
+
+## Where math is not equal in both formats
+
+This is the one place the package does not deliver on "the same information in
+both formats," and the cause is upstream rather than fixable here.
+
+A screen reader can only navigate an equation — step into a fraction, re-read a
+single subscript, hand the expression to a braille display — if the file carries
+the equation's *structure*. On the web it does: Typst emits real MathML. In a
+PDF, structure requires PDF 2.0's associated-files mechanism, which attaches a
+MathML representation to each `Formula` structure element; PDF/UA-1, built on
+PDF 1.7, has no such mechanism and allows only a flat `/Alt` string.
+
+**Typst 0.15.1 never emits that MathML.** Inspecting the PDFs this repository
+builds, every equation is a `/Formula` element carrying `/Alt` and nothing else
+— no MathML, no `/AF` associated-file entries — and that is true whether the
+document targets PDF 1.7 or PDF 2.0. Nor can PDF/UA-2 be requested: `ua-1` is
+the only accessibility standard `--pdf-standard` accepts, and asking for
+`2.0,ua-1` fails outright with *"PDF 2.0 is not compatible with PDF/UA-1."* So
+today the choice is PDF/UA-1 with alt-text math, or PDF 2.0 with alt-text math
+and no enforced accessibility standard at all.
+
+What this means in practice:
+
+- `eq(alt, body)` is not belt-and-braces, it is the *only* thing a PDF reader
+  gets. Write the alt the way you would say the formula out loud in class —
+  `eq("beta equals 0.0086", $beta = 0.0086$)` — because a reader cannot fall
+  back to the structure to work out what you meant.
+- A flat string cannot be navigated or re-read in pieces. For a long or nested
+  expression, point students at the web version, which can be.
+- Anything that is genuinely a diagram in disguise — a commutative diagram, a
+  labelled derivation — is better served by `figure-image()` with real alt text
+  than by an equation.
+
+When Typst gains MathML in tagged PDF, `eq()` is the seam that changes: it
+already has both the structural body and the spoken form, so the alt text stays
+useful and no course content needs rewriting.
 
 ## One site, three shapes
 
@@ -168,6 +210,44 @@ of most surprises:
    relative level and pass it as `depth:`, so a component heading nests under
    the page title instead of becoming its sibling. Getting this wrong is
    invisible in HTML and shows up as a flat PDF outline.
+
+## Development
+
+`template/main.typ` imports `@preview/coconut:0.1.0`, the same pinned import a
+consumer writes, because it is the file they receive from `typst init`. Building
+it from a clone therefore needs one extra step: the working tree is staged into
+`dist/` as if it were the published package, and `--package-path` points Typst
+at it. The pin resolves to your branch instead of to Typst Universe, so there is
+no second copy of the example site to drift out of sync, and nothing to rewrite
+before publishing.
+
+```sh
+npm install && npx playwright install chromium
+
+npm run check          # stage, build all three shapes, then run axe
+npm run build          # stage and build only, into build/
+npm run axe -- build/site build/reader
+```
+
+`npm run build` wraps `.github/scripts/build.sh`, which is also what CI runs. To
+drive the compiler yourself — for `typst watch`, say — stage once and pass the
+path:
+
+```sh
+node .github/scripts/stage-package.mjs
+typst watch template/main.typ --package-path dist --features bundle,html --format bundle site
+```
+
+Staging also verifies that the version pinned in `template/main.typ` matches
+`version` in `typst.toml`, and fails with an explicit message if not. Without
+that check a version bump leaves Typst reporting only `package not found`.
+
+`.github/workflows/accessibility.yml` runs the same build on every push and pull
+request, with `--pdf-standard ua-1` on the PDFs so Typst enforces PDF/UA, then
+runs [axe-core](https://github.com/dequelabs/axe-core) over every emitted HTML
+page against WCAG 2.2 AA plus axe's best-practice rules. The reader is checked
+alongside the website, because concatenating every route into one document can
+produce problems no single page has.
 
 ## License
 

@@ -9,6 +9,16 @@ repository = "https://github.com/kevinlin1/coconut"
 keywords = ["course", "content", "management"]
 categories = ["components"]
 compiler = "0.15.1"
+# Development-only; nothing here belongs in the published package.
+exclude = [
+  ".github",
+  ".gitignore",
+  "build",
+  "dist",
+  "node_modules",
+  "package.json",
+  "package-lock.json",
+]
 
 [template]
 path = "template"

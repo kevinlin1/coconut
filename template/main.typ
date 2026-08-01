@@ -1,6 +1,4 @@
-// While developing this package, import from the repo directly. Once
-// published, consumers write `#import "@preview/coconut:0.1.0": *`.
-#import "lib.typ": *
+#import "@preview/coconut:0.1.0": *
 
 // A complete, if small, course site: syllabus, staff, term schedule, weekly
 // meetings, a problem set with its answer key, a midterm with its key, and a

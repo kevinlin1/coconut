@@ -1,0 +1,17 @@
+{
+  "name": "coconut-checks",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Accessibility checks for the coconut Typst package. Not part of the published package.",
+  "type": "module",
+  "license": "MIT",
+  "scripts": {
+    "build": ".github/scripts/build.sh",
+    "axe": "node .github/scripts/axe-check.mjs",
+    "check": "npm run build && npm run axe -- build/site build/reader"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "^4.10.2",
+    "playwright": "^1.56.0"
+  }
+}

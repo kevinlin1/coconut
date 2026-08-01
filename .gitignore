@@ -1,6 +1,13 @@
 # Typst Output Files
 *.html
 *.pdf
+build/
+
+# Working Tree Staged As @preview/coconut
+dist/
+
+# Accessibility Checks
+node_modules/
 
 # Editor & System Files
 .vscode/

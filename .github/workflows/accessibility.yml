@@ -1,0 +1,70 @@
+name: Build and check accessibility
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  # Matches `compiler` in typst.toml. Bundle export is experimental and its
+  # behaviour may change between releases, so the toolchain is pinned rather
+  # than tracking latest.
+  TYPST_VERSION: "0.15.1"
+
+jobs:
+  accessibility:
+    name: Build the bundle and run axe
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: typst-community/setup-typst@v4
+        with:
+          typst-version: ${{ env.TYPST_VERSION }}
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "20"
+          cache: npm
+
+      - run: npm ci
+
+      # Only the browser binaries are worth caching; `playwright install` still
+      # runs afterwards to pull the system libraries it needs, which are not
+      # part of this path.
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+
+      - run: npx playwright install --with-deps chromium
+
+      # Stages the working tree as @preview/coconut and builds all three shapes
+      # of the example site from template/main.typ — the same entrypoint, with
+      # the same pinned import, that `typst init @preview/coconut` gives a user.
+      # The pin resolves to this branch rather than to Typst Universe, so what
+      # CI checks is the source in the pull request.
+      - name: Build the example site against the working tree
+        run: .github/scripts/build.sh build
+
+      # The reader is checked alongside the website because concatenating every
+      # route into one document can produce problems no single page has, such as
+      # duplicate landmark labels.
+      - name: Check every page with axe
+        run: |
+          node .github/scripts/axe-check.mjs build/site build/reader \
+            --report build/axe-report.json
+
+      - name: Upload the built site and the axe report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: site-and-axe-report
+          path: build/
+          if-no-files-found: error
