@@ -36,6 +36,9 @@
 #import "src/components/media.typ": (
   code-listing, decorative, eq, figure-image, file-link, media-link,
 )
+// The alt-text rules the media and staff components enforce, exported so a page
+// writing a bare `image()` can hold itself to the same standard.
+#import "src/alt.typ": alt-problem, check-alt
 
 // --- Syllabus and policies -------------------------------------------------
 #import "src/components/syllabus.typ": (

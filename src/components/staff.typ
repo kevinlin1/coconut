@@ -1,3 +1,4 @@
+#import "../alt.typ": check-alt
 #import "../table.typ": data-table
 #import "../theme.typ": colors
 #import "syllabus.typ": facts
@@ -14,6 +15,9 @@
   email: none,
   hours: none,
   location: none,
+  // The photo itself, as bytes: `read("okonkwo.jpg", encoding: none)`. A path
+  // would be resolved against this file, inside the package, rather than
+  // against the roster the author wrote it in.
   photo: none,
   photo-alt: none,
   bio: none,
@@ -44,10 +48,13 @@
   if p.photo != none {
     // A staff photo is meaningful content, not decoration — it is how a student
     // recognizes who to approach in a crowded office-hour room — so it needs a
-    // real description of the person, not "photo of instructor".
+    // real description of the person. "Photo of instructor" is rejected for the
+    // same reason a missing one is: neither helps anyone find the right desk.
+    check-alt(p.photo-alt, "the photo of " + repr(p.name))
     assert(
-      p.photo-alt != none,
-      message: "person " + repr(p.name) + " has a photo but no photo-alt.",
+      type(p.photo) == bytes,
+      message: "person " + repr(p.name) + " has a photo that is not image data.\n"
+        + "  Read the file where the path is written: photo: read(\"..\", encoding: none)",
     )
     box(width: 4cm, image(p.photo, alt: p.photo-alt, width: 100%))
   }

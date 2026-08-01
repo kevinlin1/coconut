@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 200" width="640" height="200">
+  <!-- The four stages the course follows, drawn once so the syllabus has a
+       figure to describe. Light-scheme colors are presentation attributes, so
+       they survive into the PDF, which is printed on white; the dark scheme is
+       a media query, which a browser applies to an SVG loaded through <img>
+       and the PDF renderer ignores. Both palettes are the ones in
+       src/theme.typ, so the figure matches the page around it. -->
+  <style>
+    @media (prefers-color-scheme: dark) {
+      .paper { fill: #14171a; }
+      .box { fill: #1b1f23; stroke: #3a4149; }
+      .label { fill: #e8eaed; }
+      .sub { fill: #a9b1bb; }
+      .flow { fill: #7fb7f0; stroke: #7fb7f0; }
+    }
+  </style>
+
+  <rect class="paper" width="640" height="200" fill="#ffffff"/>
+
+  <g class="box" fill="#f4f6f8" stroke="#c9d0d8" stroke-width="1">
+    <rect x="10" y="52" width="134" height="88" rx="4"/>
+    <rect x="172" y="52" width="134" height="88" rx="4"/>
+    <rect x="334" y="52" width="134" height="88" rx="4"/>
+    <rect x="496" y="52" width="134" height="88" rx="4"/>
+  </g>
+
+  <g class="flow" fill="#0b5394" stroke="#0b5394" stroke-width="2">
+    <path d="M148 96 h14"/><path d="M162 90 l8 6 -8 6 z" stroke="none"/>
+    <path d="M310 96 h14"/><path d="M324 90 l8 6 -8 6 z" stroke="none"/>
+    <path d="M472 96 h14"/><path d="M486 90 l8 6 -8 6 z" stroke="none"/>
+  </g>
+
+  <g class="label" fill="#141618" font-family="Libertinus Serif, Georgia, serif" font-size="17" text-anchor="middle">
+    <text x="77" y="88">Instrument</text>
+    <text x="239" y="88">Dataset</text>
+    <text x="401" y="88">Analysis</text>
+    <text x="563" y="88">Argument</text>
+  </g>
+
+  <g class="sub" fill="#4c525c" font-family="Libertinus Serif, Georgia, serif" font-size="13" text-anchor="middle">
+    <text x="77" y="112">what it can</text>
+    <text x="77" y="128">and cannot see</text>
+    <text x="239" y="112">what was kept,</text>
+    <text x="239" y="128">and what was not</text>
+    <text x="401" y="112">what the numbers</text>
+    <text x="401" y="128">will support</text>
+    <text x="563" y="112">what gets claimed</text>
+    <text x="563" y="128">in public</text>
+  </g>
+</svg>

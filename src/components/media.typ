@@ -1,15 +1,33 @@
+#import "../alt.typ": check-alt
 #import "../theme.typ": colors
 #import "callout.typ": disclosure
 
 // Images, figures, media links, and code listings.
 //
 // The one rule this module enforces rather than suggests: a figure has to
-// describe itself. `figure-image()` fails the build when `alt` is missing,
-// because a missing alt text is invisible to the person who wrote the page and
-// total to the person who needs it. Failing at compile time is the only point
-// at which it is cheap to fix.
+// describe itself. `figure-image()` fails the build when `alt` is missing — and
+// when it is present but says nothing, because `alt: "chart.png"` passes every
+// automated check there is while leaving the reader exactly where a missing one
+// would. `src/alt.typ` holds the rules and the reasoning; failing at compile
+// time is the only point at which either is cheap to fix.
+
+// A message worth its length: Typst resolves a relative path against the file
+// the `image()` call is written in, which for a component is this file, inside
+// the package. A path handed to a component therefore looks for the image in
+// the package and reports "file not found" against a line the author did not
+// write. `read()` runs in the author's file, where the path means what they
+// meant by it.
+#let _path-instead-of-data(source) = (
+  "figure-image() takes image data, not a path.\n"
+    + "  Read the file where the path is written:\n"
+    + "    figure-image(read(" + repr(source) + ", encoding: none), alt: \"..\")\n"
+    + "  Typst resolves a relative path against the file the image() call sits in, which for\n"
+    + "  a package component is the package — not your page — so a path passed in here would\n"
+    + "  be looked for in the wrong place."
+)
 
 #let figure-image(
+  // The image itself, as bytes: `read("diagram.svg", encoding: none)`.
   source,
   alt: none,
   caption: none,
@@ -19,11 +37,10 @@
   description: none,
   width: auto,
 ) = {
-  assert(
-    alt != none and alt.trim() != "",
-    message: "figure-image(\"" + source + "\") needs alt: a short description of the image. "
-      + "If the image is purely decorative, use decorative() instead of a figure.",
-  )
+  // The caption goes in so the two can be compared: an alt text the caption
+  // already covers is read out twice and adds nothing the second time.
+  check-alt(alt, "this figure", caption: caption)
+  assert(type(source) == bytes, message: _path-instead-of-data(source))
   let picture = image(source, alt: alt, width: width)
   if caption == none { picture } else { figure(picture, caption: caption) }
   // Outside the figure, so the disclosure is reachable in its own right rather

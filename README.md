@@ -133,6 +133,7 @@ pin in each of them.
 | Exams | `exam-cover`, `exam-instructions`, `multiple-choice`, `true-false`, `matching`, `identity-lines`, `end-of-exam` |
 | Callouts | `callout`, `note`, `tip`, `important`, `warning`, `deadline`, `example`, `activity`, `disclosure` |
 | Media | `figure-image`, `eq`, `media-link`, `file-link`, `code-listing`, `decorative` |
+| Alt text | `check-alt`, `alt-problem` — the rules the components enforce, for a page writing a bare `image()` |
 | Reference | `reading`, `reading-list`, `materials-index`, `announcements`, `glossary`, `resource-table`, `badge` |
 | Building blocks | `data-table`, `cell`, `page-query`, `page-total`, `colors`, `parse-time` |
 
@@ -208,6 +209,9 @@ The point of the package is that a component you drop in is already accessible:
 - **A large-print PDF beside every standard one,** at 18 point, linked from the
   page it belongs to rather than filed away somewhere — see
   [Large print](#large-print).
+- **Alt text that is a description,** not just alt text that exists —
+  `alt: "chart.png"` fails the build, and so does the caption repeated back.
+  See [What counts as alt text](#what-counts-as-alt-text).
 - **Contrast.** Every foreground/background pair in the palette clears WCAG 2.2
   AAA (7:1) in both light and dark schemes.
 - **Never color alone.** Callouts, schedule rows, and marked answers all carry a
@@ -226,6 +230,69 @@ The point of the package is that a component you drop in is already accessible:
   read structurally. In the PDF it is alt text instead — see below.
 
 These are claims, so CI checks them — see [Development](#development).
+
+## What counts as alt text
+
+Every automated accessibility checker asks whether an image has alt text, and
+none of them asks whether that text is a description. `alt="image"` passes axe,
+passes PDF/UA, passes a manual audit that greps for missing attributes — and
+leaves a student exactly where a missing one would, minus the silence that would
+at least have told them something was gone.
+
+So the package checks the text itself. An image is described with
+`figure-image()`, whose `alt` has to survive this list:
+
+| Rejected | Because |
+| --- | --- |
+| missing, empty, or punctuation only | Nothing is announced, and the reader cannot tell that anything is there. |
+| `"image"`, `"the chart"`, `"TODO"` | The element is announced as an image already. Naming the medium adds nothing. |
+| `"co2-trend.png"`, `"IMG_1024"` | What the file is called is not what it shows. |
+| `"https://example.edu/…"` | A URL read character by character is not a description. |
+| `"Image of the CO₂ record"` | Announced as "image, image of the CO₂ record". Start with the subject. |
+| under 2 words or 8 characters | A label is not a description. |
+| over 250 characters | Alt text cannot be paused, re-read, or navigated within; use `description:`. |
+| the caption, again | The caption is read out already. Say what it leaves out. |
+| the same description as another image on the page | Either one of them is decoration, or the reader cannot tell them apart. |
+
+What survives is not necessarily *good* — no automated check can tell whether a
+description is accurate, and none of this replaces reading the page with a
+screen reader. It rules out the alt text that was never a description at all,
+which is most of what goes wrong.
+
+The rules run twice, because neither place sees everything:
+
+- **At compile time,** in `src/alt.typ`, which is the only point where both
+  output formats are still in hand. The PDF matters most here: `axe` never sees
+  it, and a flat `/Alt` string is all a PDF reader gets.
+- **Over the built HTML,** in `.github/scripts/alt-text-check.mjs`, which sees
+  every `<img>` on the page however it got there — including a bare `image()`
+  in course content that never went through a component — and can resolve what
+  the compiler cannot: whether an image is hidden from the accessibility tree,
+  what its `<figcaption>` actually says, and whether two images share one
+  description.
+
+Writing a figure, then:
+
+```typst
+#figure-image(
+  // read() rather than a path: Typst resolves a relative path against the file
+  // the image() call is written in, which for a component is inside the package.
+  read("figures/data-to-argument.svg", encoding: none),
+  alt: "Four labelled boxes joined left to right by arrows: instrument, dataset, analysis, argument.",
+  caption: [The route a measurement takes, and the four places this course stops along it.],
+  // The long description is a disclosure widget beside the figure, not a
+  // string: it can be paragraphs, it can be navigated, and it prints.
+  description: [A measurement starts at an *instrument*, which can see some
+    things and not others…],
+)
+```
+
+`alt` says what the image *is* — enough to decide whether to open the long
+description. `description` says what it *shows*. An image that is genuinely
+decorative has neither: pass it to `decorative()`, which marks it as an artifact
+in the PDF and hides it from the accessibility tree on the web, so it is skipped
+rather than read out as a mystery. Staff photos go through the same check, under
+`person(photo: .., photo-alt: ..)`.
 
 ## Where math is not equal in both formats
 
@@ -330,9 +397,11 @@ before publishing.
 ```sh
 npm install && npx playwright install chromium
 
-npm run check          # stage, build every shape, then run axe
+npm run check          # stage, build all three shapes, then run every check
 npm run build          # stage and build only, into build/
 npm run axe -- build/site build/reader
+npm run alt -- build/site build/reader
+npm test               # the alt-text rules, without a build or a browser
 npm run pages          # build, then lay out the published site in build/pages
 ```
 
@@ -357,12 +426,20 @@ page against WCAG 2.2 AA plus axe's best-practice rules. The reader is checked
 alongside the website, because concatenating every route into one document can
 produce problems no single page has.
 
+`alt-text-check.mjs` then runs over the same pages for the one thing axe does
+not check — whether the alt text on each image says anything — and writes its
+own report beside axe's. Both reports are uploaded on every run, passing or
+failing. The rules behind it have unit tests (`npm test`), which run before the
+build: a rule that starts rejecting good descriptions is as much a bug as one
+that stops rejecting bad ones, and a check people learn to work around is worse
+than no check at all.
+
 ## Publishing
 
 The same workflow publishes the example site to GitHub Pages on every push to
 `main`. The deployment downloads the artifact the accessibility job already
 checked instead of building a second time, so what goes live is byte for byte
-what axe passed, and a failing check blocks the deployment rather than
+what the checks passed, and a failing check blocks the deployment rather than
 publishing alongside it.
 
 `.github/scripts/pages.sh` lays out what gets served. The website goes at the

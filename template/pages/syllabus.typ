@@ -16,6 +16,33 @@
       instrument that records it to the graph in a city council meeting, and
       asks what is gained and lost at every step.])
 
+    // The one figure in the example site. `alt` says what the diagram is —
+    // enough to know whether to open it — and `description` says what it shows,
+    // because four labelled boxes are not a sentence. Both are checked at
+    // compile time; try replacing the alt with "diagram.svg" and rebuilding.
+    //
+    // `read()` rather than a path: Typst resolves a relative path against the
+    // file the `image()` call is written in, and that call is inside the
+    // package, not here.
+    #figure-image(
+      read("../figures/data-to-argument.svg", encoding: none),
+      width: 100%,
+      alt: "Four labelled boxes joined left to right by arrows: instrument, dataset, analysis, argument.",
+      caption: [The route a measurement takes, and the four places this course stops
+        along it.],
+      description: [A measurement starts at an *instrument*, which can see some
+        things and not others: a thermometer at an airport records the air over a
+        runway, not the air over the neighborhood beside it. What the instrument
+        records becomes a *dataset*, which keeps some of the reading and drops the
+        rest — a monthly average keeps the trend and loses the afternoon it was
+        hottest. The dataset supports an *analysis*, which can establish some
+        claims and not others: a trend is not a cause, and a correlation across
+        cities is not a prediction for one. The analysis is then made into an
+        *argument* in public, where the uncertainty that survived every earlier
+        step is usually the first thing dropped. The course spends roughly two
+        weeks at each arrow.],
+    )
+
     #learning-objectives((
       [Read a published environmental dataset and describe how it was collected],
       [Estimate a trend from a time series and state its uncertainty honestly],

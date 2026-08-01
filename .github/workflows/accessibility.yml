@@ -17,7 +17,7 @@ env:
 
 jobs:
   accessibility:
-    name: Build the bundle and run axe
+    name: Build the bundle and check it
     runs-on: ubuntu-latest
 
     steps:
@@ -33,6 +33,13 @@ jobs:
           cache: npm
 
       - run: npm ci
+
+      # The alt-text rules, tested against the descriptions they must reject and
+      # the ones they must not. No browser and no build behind it, so a rule
+      # broken in either direction fails here in seconds rather than after a
+      # full build.
+      - name: Test the alt-text rules
+        run: npm test
 
       # Only the browser binaries are worth caching; `playwright install` still
       # runs afterwards to pull the system libraries it needs, which are not
@@ -61,18 +68,29 @@ jobs:
           node .github/scripts/axe-check.mjs build/site build/reader \
             --report build/axe-report.json
 
-      - name: Upload the built site and the axe report
+      # axe checks that images have alt text. This checks that the alt text is a
+      # description — not a filename, a placeholder, or the caption again — for
+      # every image on the page, including any that reached it without going
+      # through a component. Runs even when axe failed, so one build reports
+      # everything that is wrong with it rather than one thing at a time.
+      - name: Check that the alt text describes something
+        if: always()
+        run: |
+          node .github/scripts/alt-text-check.mjs build/site build/reader \
+            --report build/alt-text-report.json
+
+      - name: Upload the built site and both reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: site-and-axe-report
+          name: site-and-reports
           path: build/
           if-no-files-found: error
 
   publish:
     name: Publish the website to GitHub Pages
-    # Only what axe has already passed gets published, and only from main —
-    # a pull request builds and is checked, but never deploys.
+    # Only what the checks have already passed gets published, and only from
+    # main — a pull request builds and is checked, but never deploys.
     needs: accessibility
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
@@ -100,7 +118,7 @@ jobs:
       - name: Download the checked site
         uses: actions/download-artifact@v4
         with:
-          name: site-and-axe-report
+          name: site-and-reports
           path: build
 
       - name: Assemble the Pages root

@@ -8,7 +8,9 @@
   "scripts": {
     "build": ".github/scripts/build.sh",
     "axe": "node .github/scripts/axe-check.mjs",
-    "check": "npm run build && npm run axe -- build/site build/reader",
+    "alt": "node .github/scripts/alt-text-check.mjs",
+    "test": "node --test .github/scripts",
+    "check": "npm run build && npm run axe -- build/site build/reader && npm run alt -- build/site build/reader && npm test",
     "pages": "npm run build && .github/scripts/pages.sh build build/pages"
   },
   "devDependencies": {

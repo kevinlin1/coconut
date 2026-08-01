@@ -1,5 +1,9 @@
 // Runs axe-core over every HTML file the bundle export produced.
 //
+// axe's `image-alt` rule checks that images have alt text; whether that text is
+// a description rather than a filename is `alt-text-check.mjs`, which runs
+// alongside this.
+//
 // The pages are self-contained — inline stylesheet, no scripts, no external
 // assets — so they are loaded straight off disk over file:// rather than
 // through a server. Exits non-zero if any page has a violation, and writes the
@@ -7,11 +11,12 @@
 //
 // Usage: node axe-check.mjs <directory>... [--report <path>] [--tags a,b,c]
 
-import { readdir, writeFile, mkdir } from "node:fs/promises";
+import { writeFile, mkdir } from "node:fs/promises";
 import { pathToFileURL } from "node:url";
 import path from "node:path";
 import { chromium } from "playwright";
 import AxeBuilder from "@axe-core/playwright";
+import { htmlFiles } from "./html-files.mjs";
 
 // WCAG 2.2 AA is the conformance target; `best-practice` adds the structural
 // rules the package promises (one main landmark, no skipped heading levels).
@@ -36,17 +41,6 @@ function parseArgs(argv) {
     process.exit(2);
   }
   return args;
-}
-
-// Every HTML file under `dir`, as { label, path } — the label is what shows up
-// in the log and the report, so it stays relative to the directory given.
-async function htmlFiles(dir) {
-  const entries = await readdir(dir, { recursive: true, withFileTypes: true });
-  return entries
-    .filter((e) => e.isFile() && e.name.endsWith(".html"))
-    .map((e) => path.join(e.parentPath ?? e.path, e.name))
-    .sort()
-    .map((p) => ({ label: path.relative(".", p), path: p }));
 }
 
 // axe reports one violation per rule with an array of offending nodes; print
