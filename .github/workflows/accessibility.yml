@@ -45,7 +45,7 @@ jobs:
 
       - run: npx playwright install --with-deps chromium
 
-      # Stages the working tree as @preview/coconut and builds all three shapes
+      # Stages the working tree as @preview/coconut and builds every shape
       # of the example site from template/main.typ — the same entrypoint, with
       # the same pinned import, that `typst init @preview/coconut` gives a user.
       # The pin resolves to this branch rather than to Typst Universe, so what

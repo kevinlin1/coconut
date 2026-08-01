@@ -14,15 +14,24 @@ accessibility work already done.
 One source file builds three things, chosen by `--format`:
 
 ```sh
-# The website: one HTML page and one PDF per route, into site/
+# The website: one HTML page and two PDFs per route, into site/
 typst watch main.typ --features bundle,html --format bundle site
 
 # The course reader: every page in sequence as one continuous PDF
 typst compile main.typ --features bundle,html --format pdf course-reader.pdf
 
+# The same reader in large print, 18-point type
+typst compile main.typ --features bundle,html --format pdf \
+  --input large-print=true course-reader-large-print.pdf
+
 # The same reader as a single long web page
 typst compile main.typ --features bundle,html --format html course-reader.html
 ```
+
+Every route writes its PDF twice — `problem-set-1.pdf` beside
+`problem-set-1-large-print.pdf` — and each web page links to both. The reader
+takes a flag instead, because that build writes exactly one document and has to
+be told which edition it is. See [Large print](#large-print).
 
 Add `--pdf-standard ua-1` to any PDF build to have Typst enforce the
 accessibility standard; the example site passes in every shape.
@@ -142,6 +151,46 @@ never by dropping information:
   live site (when `course(url: ..)` is set) from inside a PDF, because relative
   links between downloaded PDFs break the moment one is emailed.
 
+## Large print
+
+Every PDF is emitted twice: the standard edition, and a large-print edition at
+18 point under the same name plus `-large-print`. It is on by default, and the
+"download this page as a PDF" line beside each page title lists both, so a
+student who needs 18-point type finds it where everyone finds the PDF instead of
+emailing the instructor for it a week into term.
+
+The two editions are the same document. Same content, same problems, same
+tables, same headings in the same order, same tags, same `--pdf-standard ua-1`.
+What changes is the typesetting:
+
+| | Standard | Large print |
+| --- | --- | --- |
+| Body type | 11 pt | 18 pt — the floor APH and RNIB both set |
+| Leading | 0.72 em | 0.9 em, for tracking back to the start of a line |
+| Side margins | 1.9–2.2 cm | 1.4 cm, for the tables; prose measures ~60 characters either way |
+| Table cell padding | 0.7 em | 0.45 em, so the words keep the width |
+| Hyphenation | off | off, except inside table cells |
+| Ruled writing space | ~8.5 mm | ~14 mm, sized in `em` like everything else |
+
+Nothing here is a second stylesheet. Type sizes across the package are `em`
+relative, so raising one number carries headings, callouts, tables, and the
+writing space on a problem set with it — which is also why an instructor's own
+components come out right in both editions without doing anything.
+
+Two deliberate omissions. There is no large-print HTML: a web page already
+reflows at whatever size the reader's browser is set to, and a second page at a
+fixed larger size would take that control away. And hyphenation stays off in
+body text — a word split across two lines is one of the harder things to read
+with low vision — but inside a table cell the alternative is worse, because a
+word wider than its column prints on top of the next one.
+
+Turn it off for a route with `large-print: false`, or site-wide with
+`bundle(large-print: false, ..)`; that governs the per-page files, while
+`--input large-print=true` still builds a large-print reader, because typing it
+is an explicit request rather than a default. Worth hesitating over either way:
+a student who needs 18-point type and doesn't find it published has to ask for
+it by name, one handout at a time.
+
 ## The accessibility floor
 
 The point of the package is that a component you drop in is already accessible:
@@ -152,9 +201,13 @@ The point of the package is that a component you drop in is already accessible:
 - **Real data tables.** `data-table()` emits `<caption>` and `scope="col"` /
   `scope="row"` headers, so a schedule cell is announced with both of its
   coordinates. The weekly grid is a table with `rowspan`, not positioned boxes.
-- **Every PDF passes `--pdf-standard ua-1`,** including the example site.
-  Tagged PDF is on by default in Typst; `figure-image()` refuses to build
-  without `alt`, and `eq()` attaches the spoken form of an equation.
+- **Every PDF passes `--pdf-standard ua-1`,** including the example site and
+  both editions of every page. Tagged PDF is on by default in Typst;
+  `figure-image()` refuses to build without `alt`, and `eq()` attaches the
+  spoken form of an equation.
+- **A large-print PDF beside every standard one,** at 18 point, linked from the
+  page it belongs to rather than filed away somewhere — see
+  [Large print](#large-print).
 - **Contrast.** Every foreground/background pair in the palette clears WCAG 2.2
   AAA (7:1) in both light and dark schemes.
 - **Never color alone.** Callouts, schedule rows, and marked answers all carry a
@@ -221,11 +274,20 @@ a section to the document already in progress:
 
 ```typst
 context if target() == "bundle" {
-  for format in formats { document(base + "." + format, ..) }  // the website
+  for format in formats {
+    document(base + "." + format, ..)                    // the website
+    if format == "pdf" and large-print {
+      document(base + "-large-print.pdf", ..)            // the same page at 18 point
+    }
+  }
 } else if target() == "paged" and "pdf" in formats {
-  contents(single: true)                                       // one section of the reader
+  contents(single: true, large-print-input())            // one section of the reader
 }
 ```
+
+A bundle emits as many documents as it likes, which is why both editions of
+every page come out of the one pass. A single-document build emits exactly one,
+so the reader is compiled twice and told which edition it is.
 
 This is the shape Typst's own documentation uses to publish typst.app/docs and
 its standalone reference PDF from one source (see `docs/components/section.typ`
@@ -268,7 +330,7 @@ before publishing.
 ```sh
 npm install && npx playwright install chromium
 
-npm run check          # stage, build all three shapes, then run axe
+npm run check          # stage, build every shape, then run axe
 npm run build          # stage and build only, into build/
 npm run axe -- build/site build/reader
 npm run pages          # build, then lay out the published site in build/pages
@@ -306,7 +368,8 @@ publishing alongside it.
 `.github/scripts/pages.sh` lays out what gets served. The website goes at the
 root, so the relative links the bundle emits — navigation, the per-page PDF
 links, cross-page links in the schedule — work unchanged; the course reader is
-copied in beside it as `course-reader.html` and `course-reader.pdf`. Run
+copied in beside it as `course-reader.html`, `course-reader.pdf`, and
+`course-reader-large-print.pdf`. Run
 `npm run pages` to produce that same directory locally in `build/pages`, and
 serve it with any static file server to check it before pushing.
 

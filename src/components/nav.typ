@@ -1,4 +1,4 @@
-#import "../config.typ": config
+#import "../config.typ": config, large-print-suffix
 #import "../scope.typ": page-count
 #import "../slug.typ": slugify
 #import "../theme.typ": colors
@@ -55,16 +55,28 @@
 // "Also available as" line under the page title. Only rendered in HTML, and
 // only when the PDF twin is actually part of this page's `formats`, so it can
 // never point at a file the bundle didn't emit. The link text names the format
-// so it is meaningful when read out of context in a list of links.
+// so it is meaningful when read out of context in a list of links — which is
+// also why the second link says "large print" rather than "this version": the
+// two entries have to be told apart by their text alone.
+//
+// The large-print edition is listed here, next to the standard one, rather than
+// filed on an accessibility page somewhere: a student who needs 18-point type
+// should find it where everyone finds the PDF, without asking anyone for it.
 #let format-switcher() = context {
   let cfg = config()
   if target() != "html" or cfg.single or cfg.path == none or "pdf" not in cfg.formats {
     return
   }
-  html.p(
-    class: "page-meta no-print",
+  let links = (
     link(cfg.path + ".pdf", [Download this page as a PDF (opens a PDF file)]),
   )
+  if cfg.large-print {
+    links.push(link(
+      cfg.path + large-print-suffix + ".pdf",
+      [Download this page in large print, 18-point type (opens a PDF file)],
+    ))
+  }
+  html.p(class: "page-meta no-print", links.join[ · ])
 }
 
 #let site-header() = context {

@@ -3,7 +3,7 @@
 #import "config.typ"
 #import "scope.typ": mark-end, mark-start
 #import "slug.typ": slugify
-#import "theme.typ": colors, paged-margins, paged-styles, stylesheet
+#import "theme.typ": colors, margins-for, paged-styles, stylesheet
 
 // A course site has two shapes, and this file emits both from one description.
 //
@@ -13,7 +13,8 @@
 //
 //   typst compile main.typ --features bundle,html --format pdf reader.pdf
 //       Every route in sequence as one continuous document: the course reader
-//       students print once at the start of term.
+//       students print once at the start of term. Add
+//       `--input large-print=true` for the 18-point edition of it.
 //
 // The switch is `target()`, which reports "bundle" at the top level of a bundle
 // export and "paged" or "html" when a single document is being built (and
@@ -65,7 +66,18 @@
 // In reader mode (`single: true`) a page is one section of a longer document,
 // so it drops the per-page furniture — site navigation, the "download as PDF"
 // link, its own landmark — and keeps only its heading.
-#let chrome(kind: "page", masthead: true, page-title: none, single: false, body) = context {
+//
+// `large-print: true` is the same page in the large-print edition. It changes
+// nothing above this line: the outline, the tagging, the content, and the order
+// are what the standard edition has, at a size that can be read.
+#let chrome(
+  kind: "page",
+  masthead: true,
+  page-title: none,
+  single: false,
+  large-print: false,
+  body,
+) = context {
   let cfg = config.config()
 
   // Syntax highlighting is off, on both targets, because it cannot be made to
@@ -98,12 +110,12 @@
       site-footer()
     }
   } else {
-    paged-styles(kind: kind, fonts: cfg.fonts, lang: cfg.lang, {
+    paged-styles(kind: kind, large-print: large-print, fonts: cfg.fonts, lang: cfg.lang, {
       // `std.page`, not `page`: this file defines its own `page()` below, and
       // a set rule has to name the element, not the wrapper.
       set std.page(
         paper: "us-letter",
-        margin: paged-margins.at(kind, default: paged-margins.page),
+        margin: margins-for(kind, large-print: large-print),
         header: paged-header(),
         footer: paged-footer(),
       )
@@ -132,6 +144,11 @@
   title,
   path: none,
   formats: ("html", "pdf"),
+  // Also emit the large-print PDF (18-point type) beside the standard one.
+  // There is no large-print HTML: a web page already reflows at whatever size
+  // the reader's browser is set to, and shipping a second page at a fixed
+  // larger size would take that control away rather than add to it.
+  large-print: true,
   description: none,
   // Course metadata (see `course()` in `lib.typ`) and site navigation. Usually
   // passed once through `bundle()` rather than per page.
@@ -149,7 +166,12 @@
   body,
 ) = {
   let base = if path != none { path } else { slugify(title) }
-  let contents = single => {
+  // `single` is whether this is one section of a longer document; `large` is
+  // whether this rendering is the large-print edition. The route's own
+  // `large-print` flag says whether that edition is *offered*, and goes into
+  // the configuration for the switcher to read; `large` says which of the two
+  // is being typeset right now, which is why they are separate.
+  let contents = (single, large) => {
     config.init(
       title: title,
       course: course,
@@ -157,6 +179,7 @@
       path: base,
       solutions: solutions,
       formats: formats,
+      large-print: large-print,
       kind: kind,
       fonts: fonts,
       lang: lang,
@@ -164,7 +187,14 @@
     )
     reset-counters(pages: not single)
     mark-start
-    chrome(kind: kind, masthead: masthead, page-title: title, single: single, body)
+    chrome(
+      kind: kind,
+      masthead: masthead,
+      page-title: title,
+      single: single,
+      large-print: large,
+      body,
+    )
     mark-end
   }
 
@@ -175,17 +205,33 @@
         title: title,
         description: description,
         if format == "html" {
-          html-shell(title: title, description: description, lang: lang, contents(false))
+          html-shell(title: title, description: description, lang: lang, contents(false, false))
         } else {
-          contents(false)
+          contents(false, false)
         },
       )
+      if format == "pdf" and large-print {
+        document(
+          base + config.large-print-suffix + ".pdf",
+          // The suffix distinguishes the two editions on disk; the title
+          // distinguishes them everywhere a title is what gets read out — a
+          // list of open tabs, a screen reader's document list, the print
+          // dialog, a file manager showing document properties.
+          title: [#title (#config.large-print-name)],
+          description: description,
+          contents(false, true),
+        )
+      }
     }
   } else if target() == "paged" and "pdf" in formats {
     // A page the site publishes only as HTML stays out of the printed reader.
-    contents(true)
+    //
+    // Which edition the reader is comes from the command line, not from the
+    // route: this build emits one document, and a section of it cannot be set
+    // in a different size than the document it belongs to.
+    contents(true, config.large-print-input())
   } else if target() == "html" and "html" in formats {
-    contents(true)
+    contents(true, false)
   }
 }
 
@@ -231,6 +277,7 @@
   course: (:),
   fonts: (:),
   lang: "en",
+  large-print: false,
   outline: true,
 ) = context {
   let subtitle = (
@@ -245,8 +292,8 @@
     if title != none { html.h1(title) }
     if subtitle.len() > 0 { html.p(class: "page-meta", subtitle.join[ · ]) }
   } else if target() == "paged" {
-    paged-styles(fonts: fonts, lang: lang, {
-      set std.page(paper: "us-letter", margin: paged-margins.page)
+    paged-styles(large-print: large-print, fonts: fonts, lang: lang, {
+      set std.page(paper: "us-letter", margin: margins-for("page", large-print: large-print))
       align(center + horizon, {
         if title != none { text(size: 2.2em, weight: 700, title) }
         if subtitle.len() > 0 {
@@ -271,16 +318,21 @@
 // sync with the banner on the website.
 //
 // A route is a dictionary with `title` and `body`, plus any of `path`,
-// `formats`, `description`, `solutions`, `kind`, `masthead`, `in-nav` (list it
-// in the site navigation) and `in-reader` (include it in the single-document
-// editions — set it to false on the answer keys you don't want bound into the
-// copy students print).
+// `formats`, `description`, `solutions`, `kind`, `masthead`, `large-print`,
+// `in-nav` (list it in the site navigation) and `in-reader` (include it in the
+// single-document editions — set it to false on the answer keys you don't want
+// bound into the copy students print).
 #let bundle(
   routes,
   course: (:),
   nav: auto,
   fonts: (:),
   lang: "en",
+  // Emit the large-print PDF beside the standard one, for every route that
+  // doesn't say otherwise. Turning it off site-wide is a decision worth
+  // hesitating over: a student who needs 18-point type and doesn't find it
+  // published has to ask for it by name, one handout at a time.
+  large-print: true,
   // Title of the single-document editions. Bundle export ignores it, since
   // every page there carries its own title.
   title: none,
@@ -297,14 +349,28 @@
       ))
   }
 
+  // Which edition a single-document build is. Bundle export writes both and
+  // ignores this; see `large-print-input()` in `config.typ`.
+  //
+  // Deliberately not `and large-print`: the argument above decides what the
+  // site publishes by default, and asking for `--input large-print=true` on the
+  // command line is not a default but someone typing out what they want.
+  let large = config.large-print-input()
+
   // Bundle export has no single document to describe, and ignores this.
-  set document(title: if title != none { title } else { course.at("name", default: none) })
+  let doc-title = if title != none { title } else { course.at("name", default: none) }
+  set document(title: if doc-title != none and large {
+    [#doc-title (#config.large-print-name)]
+  } else {
+    doc-title
+  })
 
   let front = reader-front-matter(
     title: title,
     course: course,
     fonts: fonts,
     lang: lang,
+    large-print: large,
     outline: outline,
   )
 
@@ -316,6 +382,7 @@
           route.title,
           path: route.at("path", default: none),
           formats: route.at("formats", default: ("html", "pdf")),
+          large-print: route.at("large-print", default: large-print),
           description: route.at("description", default: none),
           course: course,
           nav: nav,

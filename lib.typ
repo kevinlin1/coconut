@@ -17,7 +17,10 @@
 #import "src/scope.typ": page-count, page-query, page-total
 
 // --- Theme, tables, and time ----------------------------------------------
-#import "src/theme.typ": colors, dark, default-fonts, light, paged-margins, stylesheet
+#import "src/theme.typ": (
+  body-size, colors, dark, default-fonts, large-print-margins, large-print-size, light,
+  margins-for, paged-margins, stylesheet,
+)
 #import "src/table.typ": cell, data-table
 #import "src/time.typ": format-range, format-time, parse-time
 

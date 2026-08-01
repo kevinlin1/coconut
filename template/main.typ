@@ -11,8 +11,8 @@
 
 // A complete, if small, course site: syllabus, staff, term schedule, weekly
 // meetings, a problem set with its answer key, a midterm with its key, and a
-// readings page. Every page is emitted as both HTML and PDF from this one
-// bundle.
+// readings page. Every page is emitted from this one bundle as HTML, as a PDF,
+// and as a large-print PDF at 18 point.
 //
 // This file is the site itself and nothing else. Each page is written in its
 // own file under `pages/`, where it defines the route it becomes — its title,

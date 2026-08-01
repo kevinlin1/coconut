@@ -110,9 +110,13 @@
   block(above: 0.9em, below: 0.9em, {
     text(fill: colors.muted, size: 0.9em, [Answer:])
     v(0.3em)
+    // Ruled in `em`, not centimetres, so the writing space grows with the type:
+    // 2.2em is about 8.5mm between rules in the standard edition and about
+    // 14mm in the large-print one, which is roughly the difference between the
+    // handwriting the two editions are asking for.
     let rule = {
       line(length: 100%, stroke: 0.5pt + colors.line)
-      v(0.85cm)
+      v(2.2em)
     }
     if height != none {
       block(width: 100%, height: height, stroke: 0.5pt + colors.line, radius: 2pt, [])
@@ -124,7 +128,11 @@
 
 // Inline blank for fill-in-the-blank questions. In the solutions build the
 // answer is printed in the blank instead of leaving it empty.
-#let blank(answer: none, width: 3cm) = context {
+//
+// The width is in `em` for the same reason the ruled lines are: a blank sized
+// in centimetres would stay 3cm wide in the large-print edition, leaving a
+// student who writes in 18-point letters a third of the room everyone else has.
+#let blank(answer: none, width: 8em) = context {
   if showing-solutions() and answer != none {
     underline(text(fill: colors.tip, answer))
   } else if target() == "html" {

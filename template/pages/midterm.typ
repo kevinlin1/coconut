@@ -44,8 +44,8 @@
 
     Give two specific, technically plausible explanations for the discrepancy,
     and for each, describe one change to the monitoring program that would test
-    it. The blank is worth #blank(answer: [4], width: 1.5cm) points per
-    explanation and #blank(answer: [4], width: 1.5cm) points per test.
+    it. The blank is worth #blank(answer: [4], width: 4em) points per
+    explanation and #blank(answer: [4], width: 4em) points per test.
 
     #answer-space(lines: 8)
 

@@ -50,6 +50,19 @@
 // Paged output is printed on white, so it always uses the light scheme.
 #let colors = light
 
+// Body type size for paged output, and the size the large-print edition sets
+// instead. 18 point is the floor both the American Printing House for the Blind
+// and RNIB put on large print; below it the result is merely big text, and a
+// student who asked for large print has to ask again.
+//
+// Everything else in this file is sized in `em`, so raising this one value
+// carries the whole design with it: headings, callout padding, table inset,
+// running header, the ruled writing space on an assignment. That is why the
+// large-print edition is a parameter rather than a second stylesheet — there is
+// no second set of numbers to keep in sync with these.
+#let body-size = 11pt
+#let large-print-size = 18pt
+
 // Typography for paged output. The defaults are the families Typst embeds in
 // the compiler, so a build produces the same PDF on a laptop and on a CI runner
 // and never emits "unknown font family" warnings at someone who has no idea
@@ -264,6 +277,17 @@ summary {
 
 // Page geometry per `kind`. Assignments and exams get a wider bottom margin
 // because their footers carry more (point totals, "continued" notices).
+//
+// The large-print edition keeps US Letter and narrows the side margins instead
+// of moving to a larger sheet, because a student prints it on the same paper
+// everyone else has.
+//
+// The extra centimetre is for the tables, not the prose: at 18 point a
+// five-column term schedule or a six-column weekly grid is what runs out of
+// paper first, while body text measures about 60 characters to the line either
+// way — inside the 45–75 that reads comfortably, and 57 at the standard
+// margins. The vertical margins stay as they are, because the running header
+// and footer grow with the type and the space they sit in has to hold them.
 #let paged-margins = (
   page: (x: 1.9cm, y: 2.1cm),
   handout: (x: 2.2cm, y: 2.2cm),
@@ -271,16 +295,47 @@ summary {
   exam: (x: 2cm, top: 2.3cm, bottom: 2.4cm),
 )
 
+#let large-print-margins = (
+  page: (x: 1.4cm, y: 2.1cm),
+  handout: (x: 1.4cm, y: 2.2cm),
+  assignment: (x: 1.4cm, top: 2.1cm, bottom: 2.4cm),
+  exam: (x: 1.4cm, top: 2.3cm, bottom: 2.4cm),
+)
+
+// The margins for one `kind`, in whichever edition is being built.
+#let margins-for(kind, large-print: false) = {
+  let set-of = if large-print { large-print-margins } else { paged-margins }
+  set-of.at(kind, default: set-of.page)
+}
+
 // Base typography and element styling for PDF output. Deliberately does *not*
 // touch `heading` structure — restyling headings through a `show` rule that
 // returns a `block` would erase the heading semantics that tagged PDF and
 // HTML export both depend on, so styling goes through `set` rules instead.
-#let paged-styles(kind: "page", fonts: (:), lang: "en", body) = {
+//
+// `large-print: true` typesets the same content as the large-print edition:
+// 18-point body type, the leading opened up to match, and no hyphenation. It is
+// the same document with the same structure and the same tagging, not a reduced
+// one — a large-print reader gets every problem, every table, and every
+// footnote the standard edition has.
+#let paged-styles(kind: "page", large-print: false, fonts: (:), lang: "en", body) = {
   let fonts = default-fonts + fonts
   // `lang` is not cosmetic: it selects hyphenation and quotation rules, and it
   // is what tells a screen reader which voice to read the PDF in.
-  set text(font: fonts.body, size: 11pt, lang: lang, fill: colors.ink)
-  set par(leading: 0.72em, spacing: 1.1em, justify: false)
+  set text(
+    font: fonts.body,
+    size: if large-print { large-print-size } else { body-size },
+    lang: lang,
+    fill: colors.ink,
+    // Text is unjustified on both editions, so hyphenation is off by default
+    // already; large print says so outright, because a word broken across two
+    // lines is one of the harder things to read with low vision or dyslexia.
+    hyphenate: if large-print { false } else { auto },
+  )
+  // Extra leading in large print: the guidance is 1.25–1.5 times the type size,
+  // and low-vision readers using magnification track from the end of one line
+  // to the start of the next by the white space between them.
+  set par(leading: if large-print { 0.9em } else { 0.72em }, spacing: 1.1em, justify: false)
   show raw: set text(font: fonts.mono, size: 0.92em)
 
   // Headings sit one level below the page title, matching the `<h1>`/`<h2>`
@@ -313,8 +368,20 @@ summary {
   // Only geometry here: header shading belongs to `data-table()`, which knows
   // which rows are headers. A blanket `fill: (_, y) => if y == 0 { .. }` would
   // shade the first data row of any plain `table()` an instructor writes.
-  set table(stroke: 0.5pt + colors.line, inset: (x: 0.7em, y: 0.55em))
-  show table.cell.where(y: 0): set text(hyphenate: false)
+  // Cell padding shrinks in `em` terms in large print so that it stays about
+  // the same width in points: a five-column term schedule has only so much
+  // paper, and padding that scaled with the type would take it from the words.
+  set table(
+    stroke: 0.5pt + colors.line,
+    inset: if large-print { (x: 0.45em, y: 0.4em) } else { (x: 0.7em, y: 0.55em) },
+  )
+  // A table column is the one place where hyphenation earns its keep. Elsewhere
+  // an unbreakable word simply makes a short line; inside a column narrower than
+  // the word, it overflows into the neighbouring cell — at 18 point, in a
+  // six-column weekly grid, "Wednesday" is wider than the column that holds it
+  // and prints on top of "Thursday". A broken word beats two headers stacked on
+  // each other, so large print hyphenates cells and only cells.
+  show table.cell: set text(hyphenate: large-print)
 
   set figure(gap: 0.9em)
   show figure.caption: set text(size: 0.92em, fill: colors.muted)
