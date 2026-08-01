@@ -8,7 +8,7 @@
 
 // --- Documents and site structure -----------------------------------------
 #import "src/document.typ": (
-  bundle, chrome, html-shell, page, reader-contents, reader-front-matter,
+  bundle, chrome, html-shell, lang-span, page, reader-contents, reader-front-matter,
   reset-counters,
 )
 #import "src/course.typ": course

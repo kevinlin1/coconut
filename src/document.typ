@@ -37,6 +37,17 @@
   problem-counter.update(0)
 }
 
+// Mark inline content with an explicit language so screen readers switch to the
+// correct pronunciation rules. On the web this emits a `<span lang="...">`; in
+// paged output it falls back to Typst's text language setting.
+#let lang-span(lang, body) = {
+  if target() == "html" {
+    html.elem("span", attrs: (lang: lang), body)
+  } else {
+    text(lang: lang, body)
+  }
+}
+
 // Supplying the whole `<html>` tree — rather than letting Typst generate the
 // scaffold around a bare body — is what lets the stylesheet live in `<head>`
 // where it belongs. Typst still injects its MathML stylesheet into this head,
