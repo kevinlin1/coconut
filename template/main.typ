@@ -8,10 +8,12 @@
 #import "pages/problem-set-1.typ": problem-set-1, problem-set-1-key
 #import "pages/midterm.typ": midterm, midterm-key
 #import "pages/readings.typ": readings
+#import "pages/lecture-notes.typ": lecture-notes
 
 // A complete, if small, course site: syllabus, staff, term schedule, weekly
-// meetings, a problem set with its answer key, a midterm with its key, and a
-// readings page. Every page is emitted as both HTML and PDF from this one
+// meetings, a problem set with its answer key, a midterm with its key, a
+// readings page, and a collaborative lecture-notes page. Every page is emitted
+// as both HTML and PDF from this one
 // bundle.
 //
 // This file is the site itself and nothing else. Each page is written in its
@@ -42,5 +44,6 @@
     midterm,
     midterm-key,
     readings,
+    lecture-notes,
   ),
 )
