@@ -254,13 +254,16 @@
   // Capture the anchor immediately: selected text + surrounding rendered
   // context (fuzzy anchor — the minified HTML has no stable ids/classes).
   function captureAnchor(selectedText) {
+    // Belt-and-suspenders: strip any stray marker glyphs from the anchor.
+    const clean = (value) => value.replace(/\u{1F4AC}/gu, "");
     const main = document.getElementById("main");
-    const text = main ? main.innerText : document.body.innerText;
-    const idx = text.indexOf(selectedText);
+    const text = clean(main ? main.innerText : document.body.innerText);
+    const needle = clean(selectedText);
+    const idx = text.indexOf(needle);
     return {
-      selectedText,
+      selectedText: needle,
       prefix: idx >= 0 ? text.slice(Math.max(0, idx - 40), idx) : "",
-      suffix: idx >= 0 ? text.slice(idx + selectedText.length, idx + selectedText.length + 40) : "",
+      suffix: idx >= 0 ? text.slice(idx + needle.length, idx + needle.length + 40) : "",
       section: false,
     };
   }
@@ -1462,16 +1465,14 @@
       return null;
     }
     mark.addEventListener("click", () => activateComment(comment.id, "mark"));
-    const marker = el(
-      "button",
-      {
-        class: "anon-marker",
-        type: "button",
-        "aria-label": `View comment by ${comment.displayName || "Anonymous"}`,
-        onclick: () => activateComment(comment.id, "mark"),
-      },
-      "\u{1F4AC}",
-    );
+    // The glyph is a CSS pseudo-element so it never appears in text selections
+    // or innerText (which feed the AI's anchors).
+    const marker = el("button", {
+      class: "anon-marker",
+      type: "button",
+      "aria-label": `View comment by ${comment.displayName || "Anonymous"}`,
+      onclick: () => activateComment(comment.id, "mark"),
+    });
     mark.after(marker);
     return mark;
   }

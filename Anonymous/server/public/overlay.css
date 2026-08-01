@@ -446,7 +446,8 @@ mark.anon-highlight.anon-active {
   }
 }
 
-/* Comment marker icon after each highlight */
+/* Comment marker icon after each highlight. The glyph lives in a pseudo-
+   element so text selections and innerText never contain it. */
 button.anon-marker {
   border: none;
   background: transparent;
@@ -456,6 +457,10 @@ button.anon-marker {
   padding: 0 3px;
   cursor: pointer;
   vertical-align: baseline;
+  user-select: none;
+}
+button.anon-marker::before {
+  content: "\1F4AC";
 }
 button.anon-marker:focus-visible {
   outline: 2px solid #1d4ed8;

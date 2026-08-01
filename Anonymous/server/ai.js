@@ -3,14 +3,10 @@
 // edit. The exact-match validation below is load-bearing: an original_snippet
 // that doesn't appear exactly once in the source is rejected, which makes the
 // fuzzy AI mapping deterministic and safe to apply later.
-import fs from "node:fs";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
 import { GoogleGenAI, Type } from "@google/genai";
 import { settings } from "./store.js";
+import { readShadowSource } from "./typst.js";
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const MAIN_TYP = path.resolve(__dirname, "..", "..", "main.typ");
 const REQUESTED_MODEL = "gemini-3.5-flash-lite";
 
 export function getApiKey() {
@@ -81,7 +77,10 @@ export async function suggest({ page, anchor, commentText }) {
   const key = getApiKey();
   if (!key) return { error: "not_configured" };
 
-  const source = fs.readFileSync(MAIN_TYP, "utf8");
+  // The shadow copy is the source the site is actually served from (it
+  // accumulates applied suggestions) — and it's what preview/apply will
+  // string-replace against, so the AI must map selections onto IT.
+  const source = readShadowSource();
   const client = new GoogleGenAI({ apiKey: key });
   const model = await resolveModel(client);
 
@@ -162,8 +161,3 @@ function locateSnippet(source, snippet) {
   return matches.length === 1 ? matches[0][0] : null;
 }
 
-// Re-validate a snippet at apply time (the source may have changed since the
-// suggestion was generated).
-export function readSource() {
-  return fs.readFileSync(MAIN_TYP, "utf8");
-}
