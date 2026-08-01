@@ -295,8 +295,20 @@ summary {
   set terms(separator: [: ], hanging-indent: 1.2em)
 
   // Links are underlined, not just colored, so they survive greyscale printing
-  // and don't rely on color perception.
-  show link: it => text(fill: colors.accent, underline(it.body, offset: 0.12em))
+  // and don't rely on color perception. The rule wraps `it`, never `it.body`:
+  // returning the body alone replaces the link with its text and the PDF loses
+  // the annotation that makes it clickable.
+  //
+  // Only links that leave the document are styled. The one internal
+  // destination is the reader's table of contents, whose rows already read as
+  // navigation; it cannot opt out with a nested `show link` of its own,
+  // because both rules would apply and this one wraps whatever the inner one
+  // returns.
+  show link: it => if type(it.dest) == str {
+    text(fill: colors.accent, underline(it, offset: 0.12em))
+  } else {
+    it
+  }
 
   // Only geometry here: header shading belongs to `data-table()`, which knows
   // which rows are headers. A blanket `fill: (_, y) => if y == 0 { .. }` would
