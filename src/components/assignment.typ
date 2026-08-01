@@ -170,8 +170,8 @@
   ) + ([],) * score)
   let total-row = (
     cell([Total], header: true),
-    cell([#total], header: true),
-  ) + (cell([], header: true),) * score
+    cell([#total], emphasis: true),
+  ) + (cell([], emphasis: true),) * score
   data-table(
     columns: header.len(),
     caption: caption,
@@ -190,7 +190,7 @@
     row-headers: true,
     header: ([Criterion], [Points], [What earns full credit]),
     rows: items.map(i => (i.criterion, [#i.points], i.at("expectations", default: [])))
-      + ((cell([Total], header: true), cell([#total], header: true), cell([], header: true)),),
+      + ((cell([Total], header: true), cell([#total], emphasis: true), cell([], emphasis: true)),),
   )
 }
 

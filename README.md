@@ -111,7 +111,14 @@ The point of the package is that a component you drop in is already accessible:
 - **Contrast.** Every foreground/background pair in the palette clears WCAG 2.2
   AAA (7:1) in both light and dark schemes.
 - **Never color alone.** Callouts, schedule rows, and marked answers all carry a
-  word as well as a tint.
+  word as well as a tint. Code listings go further and carry no syntax
+  highlighting at all: Typst writes highlight colors into each span as an inline
+  style, so they cannot follow the reader's color scheme, and no single color
+  clears 4.5:1 against both the light and the dark code background. Code is set
+  in body ink, which clears AAA in both.
+- **Totals are not headers.** A total row is shaded and bold like a header, but
+  only its label is a `<th>`; the figures beside it are data, and a blank cell
+  is never a header with nothing to announce.
 - **Web defaults that respect the reader:** system font stack, no absolute font
   sizes, visible focus, reduced-motion support, wide tables scrolling inside a
   labelled focusable region, and a print stylesheet.

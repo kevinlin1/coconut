@@ -87,8 +87,8 @@
       + (
         (
           cell([Total], header: true),
-          cell([#total%], header: true),
-          cell(if total != 100 { [Weights do not sum to 100%.] } else { [] }, header: true),
+          cell([#total%], emphasis: true),
+          cell(if total != 100 { [Weights do not sum to 100%.] } else { [] }, emphasis: true),
         ),
       ),
   )

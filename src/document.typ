@@ -67,6 +67,18 @@
 // link, its own landmark — and keeps only its heading.
 #let chrome(kind: "page", masthead: true, page-title: none, single: false, body) = context {
   let cfg = config.config()
+
+  // Syntax highlighting is off, on both targets, because it cannot be made to
+  // pass contrast on the web. Typst bakes highlight colors into each span as an
+  // inline `style` attribute, so they cannot answer `prefers-color-scheme` the
+  // way the rest of the palette does — one fixed color has to clear 4.5:1
+  // against both the light and the dark code background. No color does: the
+  // light background admits only colors below 0.165 relative luminance, the
+  // dark one only colors above 0.235. Code stays in body ink, which clears AAA
+  // in both schemes, and loses nothing a reader was relying on — color was
+  // never carrying meaning here that the code itself does not carry.
+  set raw(theme: none)
+
   if target() == "html" {
     // Sets `<html lang>`, which is how a screen reader picks the right voice
     // and pronunciation rules for the page.
