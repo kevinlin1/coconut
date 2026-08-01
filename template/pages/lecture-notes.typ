@@ -1,18 +1,41 @@
 #import "@preview/coconut:0.1.0": *
 
+#let embed-controls() = context {
+  html.div(style: "display: flex; flex-wrap: wrap; gap: 0.5em; align-items: center; margin-bottom: 0.5em;", {
+    html.elem("button", attrs: (
+      type: "button",
+      style: "padding: 0.35em 0.65em; border: 1px solid rgb(157,165,180); background: rgb(246,248,250); color: rgb(36,41,47); cursor: pointer; border-radius: 6px;",
+      onclick: "var w=this.closest('.embed-wrapper'); var f=w.querySelector('iframe'); var hidden=f.style.display==='none'; f.style.display=hidden?'block':'none'; this.textContent=hidden?'Collapse':'Expand';",
+    ), { text("Collapse") })
+
+    html.elem("button", attrs: (
+      type: "button",
+      style: "padding: 0.35em 0.65em; border: 1px solid rgb(157,165,180); background: rgb(246,248,250); color: rgb(36,41,47); cursor: pointer; border-radius: 6px;",
+      onclick: "var w=this.closest('.embed-wrapper'); var f=w.querySelector('iframe'); var h=parseInt(f.style.height||f.clientHeight,10)||0; f.style.height=Math.max(200,h-100)+'px';",
+    ), { text("Smaller") })
+
+    html.elem("button", attrs: (
+      type: "button",
+      style: "padding: 0.35em 0.65em; border: 1px solid rgb(157,165,180); background: rgb(246,248,250); color: rgb(36,41,47); cursor: pointer; border-radius: 6px;",
+      onclick: "var w=this.closest('.embed-wrapper'); var f=w.querySelector('iframe'); var h=parseInt(f.style.height||f.clientHeight,10)||0; f.style.height=(h+100)+'px';",
+    ), { text("Larger") })
+  })
+}
+
 #let embed-google-doc(url, title: none, height: 700) = context {
   if target() == "html" {
-    block(width: 100%, spacing: 0.8em, {
+    html.div(class: "embed-wrapper", style: "border: 1px solid rgb(208,215,222); border-radius: 8px; padding: 0.8em; background: rgb(248,250,252);", {
       if title != none { strong(title) }
+      embed-controls()
       html.elem("iframe", attrs: (
         src: url,
         width: "100%",
         height: str(height),
-        style: "border: 1px solid #d0d7de; width: 100%; min-height: " + str(height) + "px; background: white;",
+        style: "border: 1px solid rgb(208,215,222); width: 100%; min-height: " + str(height) + "px; background: white;",
         loading: "lazy",
         allowfullscreen: "true",
         referrerpolicy: "strict-origin-when-cross-origin",
-      ), [])
+      ))
       parbreak()
       link(url)[Open this note in Google Docs]
     })
@@ -29,8 +52,9 @@
 
 #let embed-video(url, title: none, height: 420) = context {
   if target() == "html" {
-    block(width: 100%, spacing: 0.8em, {
+    html.div(class: "embed-wrapper", style: "border: 1px solid #d0d7de; border-radius: 8px; padding: 0.8em; background: #f8fafc;", {
       if title != none { strong(title) }
+      embed-controls()
       html.elem("iframe", attrs: (
         src: url,
         width: "100%",
@@ -39,7 +63,7 @@
         loading: "lazy",
         allow: "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share",
         allowfullscreen: "true",
-      ), [])
+      ))
       parbreak()
       link(url)[Open video in a new tab]
     })
