@@ -27,9 +27,10 @@ typst compile main.typ --features bundle,html --format html course-reader.html
 Add `--pdf-standard ua-1` to any PDF build to have Typst enforce the
 accessibility standard; the example site passes in every shape.
 
-`template/main.typ` is a complete example course site — it is what `typst init
-@preview/coconut` gives you. `lib.typ` is the public API. To build it from a
-clone of this repository rather than from the published package, see
+`template/` is a complete example course site — it is what `typst init
+@preview/coconut` gives you, with `main.typ` as the entrypoint and one file per
+page beside it. `lib.typ` is the public API. To build it from a clone of this
+repository rather than from the published package, see
 [Development](#development).
 
 ## A course site in one file
@@ -66,6 +67,49 @@ running header on a printed problem set can't disagree with the banner on the
 website. `in-nav: false` keeps a route out of the site navigation; `in-reader:
 false` keeps it out of the reader, which is how you avoid binding an answer key
 into the copy students print.
+
+## A course site in several files
+
+A page is a dictionary, so a page can live in its own file and a term's worth of
+material never has to sit in one buffer. That is how the example template is
+written: `main.typ` holds the pinned import and the ordered list of routes,
+each file under `pages/` defines the route it becomes, and the data more than
+one page draws on — the course itself, the staff roster, the recurring meetings
+— sits beside them.
+
+```
+template/
+├── main.typ              the import, and the list below
+├── course.typ            course() and policy-drafts()
+├── staff.typ             the person() roster
+├── meetings.typ          the meeting() times
+└── pages/
+    ├── syllabus.typ      #let syllabus = (title: .., path: "index", body: [..])
+    ├── problem-set-1.typ one body, exported twice: handout and answer key
+    └── ..
+```
+
+```typst
+// pages/syllabus.typ
+#import "@preview/coconut:0.1.0": *
+#import "../course.typ": drafts
+
+#let syllabus = (
+  title: "Syllabus",
+  path: "index",
+  body: [#course-header(description: [..]) #policy-sections(drafts, ("late", "ai"))],
+)
+```
+
+```typst
+// main.typ — the list is the site: it sets the navigation and the reader order.
+#import "pages/syllabus.typ": syllabus
+#bundle(course: this-course, (syllabus, staff, problem-set-1, problem-set-1-key))
+```
+
+Every file imports `@preview/coconut:<version>` for itself, the way any
+multi-file Typst project does, so bumping the package version means bumping the
+pin in each of them.
 
 ## What's in the box
 
@@ -213,9 +257,9 @@ of most surprises:
 
 ## Development
 
-`template/main.typ` imports `@preview/coconut:0.1.0`, the same pinned import a
-consumer writes, because it is the file they receive from `typst init`. Building
-it from a clone therefore needs one extra step: the working tree is staged into
+The template imports `@preview/coconut:0.1.0`, the same pinned import a consumer
+writes, because it is the source they receive from `typst init`. Building it
+from a clone therefore needs one extra step: the working tree is staged into
 `dist/` as if it were the published package, and `--package-path` points Typst
 at it. The pin resolves to your branch instead of to Typst Universe, so there is
 no second copy of the example site to drift out of sync, and nothing to rewrite
@@ -239,9 +283,10 @@ node .github/scripts/stage-package.mjs
 typst watch template/main.typ --package-path dist --features bundle,html --format bundle site
 ```
 
-Staging also verifies that the version pinned in `template/main.typ` matches
-`version` in `typst.toml`, and fails with an explicit message if not. Without
-that check a version bump leaves Typst reporting only `package not found`.
+Staging also verifies that every `@preview/coconut` pin under `template/` — the
+entrypoint, the data files, and each page — matches `version` in `typst.toml`,
+and names the files that disagree if any do. Without that check a version bump
+that misses one file leaves Typst reporting only `package not found`.
 
 `.github/workflows/accessibility.yml` runs the same build on every push and pull
 request, with `--pdf-standard ua-1` on the PDFs so Typst enforces PDF/UA, then
