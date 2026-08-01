@@ -209,10 +209,10 @@
 // page from a section within it. Indenting by the resolved `level` instead
 // restores the nesting the document actually has.
 #let reader-contents(depth: 2) = context {
-  // Entries are links for navigation, but styling every one of them as a link
-  // would turn the page into a wall of blue underline; the page number and the
-  // indent already say what each row is.
-  show link: it => it.body
+  // Entries stay clickable, but they are not painted like body links: a page
+  // of blue underline reads as noise, and the indent and page number already
+  // say what each row is. `paged-styles()` leaves internal destinations
+  // unstyled for exactly this reason.
   set text(fill: colors.ink)
   let entries = query(heading).filter(h => h.outlined and h.level <= depth)
   for h in entries {
