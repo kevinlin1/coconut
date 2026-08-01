@@ -227,6 +227,7 @@ npm install && npx playwright install chromium
 npm run check          # stage, build all three shapes, then run axe
 npm run build          # stage and build only, into build/
 npm run axe -- build/site build/reader
+npm run pages          # build, then lay out the published site in build/pages
 ```
 
 `npm run build` wraps `.github/scripts/build.sh`, which is also what CI runs. To
@@ -248,6 +249,41 @@ runs [axe-core](https://github.com/dequelabs/axe-core) over every emitted HTML
 page against WCAG 2.2 AA plus axe's best-practice rules. The reader is checked
 alongside the website, because concatenating every route into one document can
 produce problems no single page has.
+
+## Publishing
+
+The same workflow publishes the example site to GitHub Pages on every push to
+`main`. The deployment downloads the artifact the accessibility job already
+checked instead of building a second time, so what goes live is byte for byte
+what axe passed, and a failing check blocks the deployment rather than
+publishing alongside it.
+
+`.github/scripts/pages.sh` lays out what gets served. The website goes at the
+root, so the relative links the bundle emits — navigation, the per-page PDF
+links, cross-page links in the schedule — work unchanged; the course reader is
+copied in beside it as `course-reader.html` and `course-reader.pdf`. Run
+`npm run pages` to produce that same directory locally in `build/pages`, and
+serve it with any static file server to check it before pushing.
+
+One caution the example inherits: `bundle()` emits every page you declare,
+including those marked `in-nav: false`. An answer key kept out of the navigation
+is unlisted, not private — publishing the site publishes it to anyone who reads
+the URL out of a classmate's browser history. Release keys by adding them to the
+bundle after the deadline, or build them separately and hand them out directly.
+
+Publishing needs Pages switched on once, under **Settings → Pages → Build and
+deployment → Source: GitHub Actions**. Until it is, the deployment step fails
+with `Resource not accessible by integration` while the accessibility job keeps
+passing.
+
+Publishing your own course needs none of this machinery — the staging and
+assembly scripts exist because this repository builds the example against its
+own working tree. From the published package it is one command, and `site/` is
+the directory to hand to `actions/upload-pages-artifact`:
+
+```sh
+typst compile main.typ --features bundle,html --format bundle site
+```
 
 ## License
 

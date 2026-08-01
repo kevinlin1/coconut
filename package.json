@@ -8,7 +8,8 @@
   "scripts": {
     "build": ".github/scripts/build.sh",
     "axe": "node .github/scripts/axe-check.mjs",
-    "check": "npm run build && npm run axe -- build/site build/reader"
+    "check": "npm run build && npm run axe -- build/site build/reader",
+    "pages": "npm run build && .github/scripts/pages.sh build build/pages"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.10.2",

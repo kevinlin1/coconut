@@ -1,4 +1,4 @@
-name: Build and check accessibility
+name: Build, check accessibility, and publish
 
 on:
   push:
@@ -68,3 +68,47 @@ jobs:
           name: site-and-axe-report
           path: build/
           if-no-files-found: error
+
+  publish:
+    name: Publish the website to GitHub Pages
+    # Only what axe has already passed gets published, and only from main —
+    # a pull request builds and is checked, but never deploys.
+    needs: accessibility
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+
+    permissions:
+      pages: write
+      id-token: write
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+
+    # Pages accepts one deployment at a time. Queue rather than cancel, so a
+    # merge is never dropped in favour of a newer commit that is still building.
+    concurrency:
+      group: pages
+      cancel-in-progress: false
+
+    steps:
+      # For the assembly script only; the site itself comes from the artifact
+      # the previous job checked, so the published bytes are the checked bytes
+      # rather than a second build of the same commit.
+      - uses: actions/checkout@v5
+
+      - name: Download the checked site
+        uses: actions/download-artifact@v4
+        with:
+          name: site-and-axe-report
+          path: build
+
+      - name: Assemble the Pages root
+        run: .github/scripts/pages.sh build build/pages
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: build/pages
+
+      - id: deploy
+        uses: actions/deploy-pages@v4
