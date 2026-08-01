@@ -32,13 +32,15 @@
       title: "AI can draft the edit",
       text: "Optionally, AI writes the actual change to the course materials for you. Accept it, tweak it, or discard it — anything you accept is sent to the instructor with your comment, and only they can apply it. You can preview exactly how the page would look.",
       target: function () { return hooks.panel; },
-      setup: function () { safe(hooks.openPanel, "compose"); }
+      setup: function () { safe(hooks.openPanel, "compose"); },
+      placement: "left"
     },
     {
       title: "Track replies and status",
       text: "The instructor can reply, approve your suggestion, and publish the change. Watch here — or the red bubble — for updates. You can delete your feedback anytime.",
       target: function () { return hooks.panel; },
-      setup: function () { safe(hooks.openPanel, "mine"); }
+      setup: function () { safe(hooks.openPanel, "mine"); },
+      placement: "left"
     },
     {
       title: "You stay anonymous",
@@ -152,24 +154,51 @@
     var margin = 8;
     var w = popup.offsetWidth;
     var h = popup.offsetHeight;
+    var vw = window.innerWidth;
+    var vh = window.innerHeight;
     var top, left;
     var rect = null;
 
     if (currentTarget) rect = currentTarget.getBoundingClientRect();
     if (rect && (rect.width > 0 || rect.height > 0)) {
-      if (window.innerHeight - rect.bottom - margin >= h) {
-        top = rect.bottom + margin;
-      } else {
-        top = rect.top - h - margin;
+      // Try each side of the target; take the first placement that fits the
+      // viewport without covering the target (the panel fills the right
+      // column, so "left of target" is what usually wins there).
+      var candidates = [
+        { top: rect.bottom + margin, left: rect.left },
+        { top: rect.top - h - margin, left: rect.left },
+        { top: rect.top, left: rect.left - w - margin },
+        { top: rect.top, left: rect.right + margin }
+      ];
+      // Steps can pin a placement so consecutive steps with the same target
+      // (whose height varies with content) don't hop around the screen.
+      if (STEPS[idx] && STEPS[idx].placement === "left") {
+        candidates.unshift({ top: rect.top, left: rect.left - w - margin });
       }
-      left = rect.left;
+      var chosen = null;
+      for (var i = 0; i < candidates.length; i++) {
+        var c = candidates[i];
+        if (
+          c.top >= margin && c.top + h <= vh - margin &&
+          c.left >= margin && c.left + w <= vw - margin
+        ) { chosen = c; break; }
+      }
+      if (chosen) {
+        top = chosen.top;
+        left = chosen.left;
+      } else {
+        // Nothing fits cleanly (small screens): sit beside the target's left
+        // edge, clamped — overlap only as a last resort.
+        top = Math.min(Math.max(margin, rect.top), Math.max(margin, vh - h - margin));
+        left = Math.max(margin, rect.left - w - margin);
+      }
     } else {
-      top = (window.innerHeight - h) / 2;
-      left = (window.innerWidth - w) / 2;
+      top = (vh - h) / 2;
+      left = (vw - w) / 2;
     }
 
-    top = Math.max(margin, Math.min(top, window.innerHeight - h - margin));
-    left = Math.max(margin, Math.min(left, window.innerWidth - w - margin));
+    top = Math.max(margin, Math.min(top, vh - h - margin));
+    left = Math.max(margin, Math.min(left, vw - w - margin));
     popup.style.top = top + "px";
     popup.style.left = left + "px";
   }

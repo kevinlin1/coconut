@@ -24,15 +24,5 @@ The changes made would be to the typst documents.
 
 Benefits:
 
-This could be more useful in many cases than the end-of-year course feedback system, because students can give feedback at any point in the course. The anonymity is also helpful for students who may prefer it when discussing sensitive information, which standard emails don't really offer.
-
-
-
-
-
-Notes for AI agent:
-
-* Only make changes to the Anonymous folder if possible. Avoid changing other files that may cause conflicts
-* For the initial generation, focus on just the typst syllabus and materials to maintain scope
-* &#x20;The interface could be just for the html typst materials, as it may be easier to develop for, such as through a web extension
+This could be more useful in many cases than the end-of-year course feedback system, because students can give feedback at any point in the course. The anonymity is also helpful for students who may prefer it when discussing sensitive information, which standard emails don't really offer. Instructors could also easily compile and make changes to the typst html and pdf easily through the interface.
 
