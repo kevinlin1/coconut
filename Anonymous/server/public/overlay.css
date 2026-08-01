@@ -1,0 +1,701 @@
+/* Anonymous feedback overlay — all rules scoped under .anon-* so the host
+   page's styling is never touched. WCAG AA contrast throughout. */
+
+.anon-root {
+  --anon-ink: #1a1a1a;
+  --anon-muted: #52525b;
+  --anon-bg: #ffffff;
+  --anon-border: #d4d4d8;
+  --anon-accent: #1d4ed8;
+  --anon-accent-ink: #ffffff;
+  --anon-danger: #b91c1c;
+  --anon-ok: #166534;
+  --anon-del-bg: #fde8e8;
+  --anon-ins-bg: #def7ec;
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size: 15px;
+  line-height: 1.45;
+  color: var(--anon-ink);
+}
+
+.anon-root *,
+.anon-root *::before,
+.anon-root *::after {
+  box-sizing: border-box;
+}
+
+.anon-root :focus-visible {
+  outline: 2px solid var(--anon-accent);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+.anon-visually-hidden {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Sticky feedback button, top-right margin */
+.anon-fab {
+  position: fixed;
+  right: 16px;
+  top: 12px;
+  z-index: 99990;
+  border: 1px solid #111827;
+  background: #111827;
+  color: #ffffff;
+  font: inherit;
+  font-weight: 600;
+  padding: 10px 18px;
+  border-radius: 999px;
+  cursor: pointer;
+  box-shadow: 0 2px 10px rgb(0 0 0 / 0.25);
+}
+.anon-fab:hover {
+  background: #1f2937;
+}
+.anon-fab .anon-fab-badge {
+  display: inline-block;
+  margin-left: 8px;
+  min-width: 20px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: #dc2626;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 700;
+  text-align: center;
+}
+/* The display rule above would otherwise override the hidden attribute and
+   leave an empty red sliver on the button. */
+.anon-fab .anon-fab-badge[hidden] {
+  display: none;
+}
+
+/* Selection popover */
+.anon-popover {
+  position: absolute;
+  z-index: 99991;
+  border: 1px solid var(--anon-border);
+  background: var(--anon-bg);
+  color: var(--anon-ink);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgb(0 0 0 / 0.2);
+}
+.anon-popover:hover {
+  background: #f4f4f5;
+}
+
+/* Panel opens under the sticky button */
+.anon-panel {
+  position: fixed;
+  right: 16px;
+  top: 64px;
+  z-index: 99992;
+  width: min(400px, calc(100vw - 32px));
+  max-height: calc(100vh - 88px);
+  overflow-y: auto;
+  background: var(--anon-bg);
+  border: 1px solid var(--anon-border);
+  border-radius: 10px;
+  box-shadow: 0 8px 30px rgb(0 0 0 / 0.25);
+  padding: 16px;
+}
+
+.anon-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.anon-panel-title {
+  font-size: 17px;
+  font-weight: 700;
+  margin: 0;
+}
+.anon-close {
+  border: 1px solid var(--anon-border);
+  background: var(--anon-bg);
+  color: var(--anon-ink);
+  font: inherit;
+  font-size: 16px;
+  line-height: 1;
+  padding: 6px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+/* Role toggle */
+.anon-role {
+  border: 1px solid var(--anon-border);
+  border-radius: 8px;
+  margin: 0 0 12px;
+  padding: 8px 12px 10px;
+}
+.anon-role legend {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--anon-muted);
+  padding: 0 4px;
+}
+.anon-role label {
+  margin-right: 16px;
+  cursor: pointer;
+}
+.anon-role input {
+  margin-right: 6px;
+}
+
+/* Tabs */
+.anon-tabs {
+  display: flex;
+  gap: 4px;
+  border-bottom: 2px solid var(--anon-border);
+  margin-bottom: 12px;
+}
+.anon-tab {
+  border: none;
+  background: none;
+  font: inherit;
+  font-weight: 600;
+  color: var(--anon-muted);
+  padding: 8px 10px;
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  margin-bottom: -2px;
+}
+.anon-tab[aria-selected="true"] {
+  color: var(--anon-accent);
+  border-bottom-color: var(--anon-accent);
+}
+
+/* Forms */
+.anon-field {
+  margin-bottom: 12px;
+}
+.anon-field label {
+  display: block;
+  font-weight: 600;
+  font-size: 14px;
+  margin-bottom: 4px;
+}
+.anon-field .anon-hint {
+  font-size: 13px;
+  color: var(--anon-muted);
+  margin: 2px 0 4px;
+}
+.anon-field textarea,
+.anon-field input[type="text"],
+.anon-field input[type="password"],
+.anon-field select {
+  width: 100%;
+  font: inherit;
+  padding: 8px;
+  border: 1px solid var(--anon-border);
+  border-radius: 6px;
+  background: var(--anon-bg);
+  color: var(--anon-ink);
+}
+.anon-field textarea {
+  min-height: 84px;
+  resize: vertical;
+}
+.anon-checkbox {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.anon-checkbox input {
+  margin-top: 4px;
+}
+
+/* Buttons */
+.anon-btn {
+  border: 1px solid var(--anon-border);
+  background: var(--anon-bg);
+  color: var(--anon-ink);
+  font: inherit;
+  font-weight: 600;
+  font-size: 14px;
+  padding: 7px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  min-height: 32px;
+}
+.anon-btn:hover {
+  background: #f4f4f5;
+}
+.anon-btn-primary {
+  background: var(--anon-accent);
+  border-color: var(--anon-accent);
+  color: var(--anon-accent-ink);
+}
+.anon-btn-primary:hover {
+  background: #1e40af;
+}
+.anon-btn-danger {
+  color: var(--anon-danger);
+  border-color: var(--anon-danger);
+}
+.anon-btn-danger:hover {
+  background: #fef2f2;
+}
+.anon-btn[disabled] {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.anon-btn-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 10px 0;
+}
+
+/* Quote of the anchored text */
+.anon-quote {
+  border-left: 4px solid var(--anon-accent);
+  background: #f4f6fd;
+  padding: 8px 10px;
+  margin: 0 0 12px;
+  border-radius: 0 6px 6px 0;
+  font-size: 14px;
+  color: #27272a;
+  overflow-wrap: anywhere;
+}
+.anon-quote .anon-quote-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--anon-muted);
+  margin-bottom: 2px;
+}
+
+/* Suggestion / diff card */
+.anon-suggestion {
+  border: 1px solid var(--anon-border);
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 12px;
+  background: #fafafa;
+}
+.anon-diff-label {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--anon-muted);
+  margin: 8px 0 2px;
+}
+.anon-diff {
+  font-family: ui-monospace, "Cascadia Code", Consolas, monospace;
+  font-size: 13px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  background: var(--anon-bg);
+  border: 1px solid var(--anon-border);
+  border-radius: 6px;
+  padding: 8px;
+  margin: 0;
+}
+.anon-diff del,
+.anon-del {
+  background: var(--anon-del-bg);
+  color: #7f1d1d;
+  text-decoration: line-through;
+}
+.anon-diff ins,
+.anon-ins {
+  background: var(--anon-ins-bg);
+  color: #14532d;
+  text-decoration: underline;
+}
+.anon-rationale {
+  font-size: 13px;
+  color: var(--anon-muted);
+  margin: 8px 0 0;
+}
+
+/* Comment cards (my feedback / instructor list) */
+.anon-card {
+  border: 1px solid var(--anon-border);
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 12px;
+}
+.anon-card-meta {
+  font-size: 13px;
+  color: var(--anon-muted);
+  margin: 0 0 6px;
+}
+.anon-chip {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--anon-border);
+  background: #f4f4f5;
+  color: #3f3f46;
+  margin-left: 6px;
+}
+.anon-chip-pending {
+  background: #fef9c3;
+  border-color: #ca8a04;
+  color: #713f12;
+}
+.anon-chip-approved,
+.anon-chip-applied {
+  background: var(--anon-ins-bg);
+  border-color: var(--anon-ok);
+  color: var(--anon-ok);
+}
+.anon-chip-rejected {
+  background: var(--anon-del-bg);
+  border-color: var(--anon-danger);
+  color: var(--anon-danger);
+}
+.anon-chip-resolved {
+  background: #e0e7ff;
+  border-color: #4338ca;
+  color: #3730a3;
+}
+.anon-reply {
+  border-left: 3px solid var(--anon-border);
+  padding: 4px 0 4px 10px;
+  margin: 8px 0;
+}
+.anon-reply-author {
+  font-weight: 700;
+  font-size: 13px;
+}
+.anon-reply-form {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+.anon-reply-form input {
+  flex: 1;
+  font: inherit;
+  padding: 6px 8px;
+  border: 1px solid var(--anon-border);
+  border-radius: 6px;
+}
+
+.anon-empty {
+  color: var(--anon-muted);
+  font-style: italic;
+}
+.anon-note {
+  font-size: 13px;
+  color: var(--anon-muted);
+}
+.anon-error {
+  color: var(--anon-danger);
+  font-weight: 600;
+  font-size: 14px;
+}
+.anon-status-ok {
+  color: var(--anon-ok);
+  font-weight: 600;
+}
+
+.anon-dash-link {
+  display: inline-block;
+  margin-bottom: 12px;
+  color: var(--anon-accent);
+  font-weight: 600;
+}
+
+/* --- In-page highlight of commented text (explicit colors: the host page
+       has a dark mode, so never rely on inherited text color) --- */
+mark.anon-highlight {
+  background: #fde047;
+  color: #1f1300;
+  border-bottom: 2px solid #a16207;
+  cursor: pointer;
+  border-radius: 2px;
+  padding: 0 1px;
+}
+mark.anon-highlight.anon-active {
+  background: #fbbf24;
+  outline: 2px solid #b45309;
+  outline-offset: 1px;
+}
+@media (prefers-reduced-motion: no-preference) {
+  mark.anon-highlight.anon-active {
+    animation: anon-flash 0.9s ease 2;
+  }
+  @keyframes anon-flash {
+    50% { background: #f59e0b; }
+  }
+}
+
+/* Comment marker icon after each highlight */
+button.anon-marker {
+  border: none;
+  background: transparent;
+  font: inherit;
+  font-size: 0.9em;
+  line-height: 1;
+  padding: 0 3px;
+  cursor: pointer;
+  vertical-align: baseline;
+}
+button.anon-marker:focus-visible {
+  outline: 2px solid #1d4ed8;
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* --- Margin comments (Google-Docs style) --- */
+.anon-margin-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+.anon-margin-card {
+  position: absolute;
+  background: var(--anon-bg);
+  border: 1px solid var(--anon-border);
+  border-radius: 8px;
+  box-shadow: 0 1px 6px rgb(0 0 0 / 0.14);
+  transition: top 150ms ease;
+  z-index: 99985;
+}
+.anon-margin-card.anon-active {
+  border-color: var(--anon-accent);
+  box-shadow: 0 2px 12px rgb(29 78 216 / 0.35);
+  z-index: 99989;
+}
+.anon-margin-head {
+  display: block;
+  width: 100%;
+  border: none;
+  background: transparent;
+  font: inherit;
+  color: var(--anon-ink);
+  text-align: left;
+  padding: 10px 12px;
+  cursor: pointer;
+  border-radius: 8px;
+}
+.anon-margin-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--anon-muted);
+  margin-bottom: 3px;
+}
+.anon-margin-preview {
+  display: block;
+  font-size: 13px;
+  color: var(--anon-ink);
+  overflow-wrap: anywhere;
+}
+.anon-margin-body {
+  padding: 0 12px 12px;
+  font-size: 13px;
+}
+.anon-margin-body .anon-reply {
+  margin: 6px 0;
+}
+.anon-margin-note {
+  font-size: 12px;
+  color: var(--anon-muted);
+  margin: 6px 0;
+}
+
+/* Narrow screens: cards hide until a highlight/marker is activated, then
+   float as a sheet near the bottom of the viewport. */
+.anon-margin-card.anon-card-overlay {
+  display: none;
+}
+.anon-margin-card.anon-card-overlay.anon-floating {
+  display: block;
+  position: fixed;
+  left: 16px;
+  right: 16px;
+  bottom: 76px;
+  top: auto !important;
+  width: auto !important;
+  max-height: 55vh;
+  overflow-y: auto;
+  z-index: 99993;
+}
+
+/* Clickable quote in panel cards (navigates to the highlight on the page) */
+button.anon-quote-click {
+  display: block;
+  width: 100%;
+  font: inherit;
+  cursor: pointer;
+  border: none;
+  border-left: 4px solid var(--anon-accent);
+}
+button.anon-quote-click:hover .anon-quote-hint {
+  text-decoration: underline;
+}
+.anon-quote-hint {
+  display: block;
+  font-size: 12px;
+  color: var(--anon-accent);
+  font-weight: 600;
+  margin-top: 4px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .anon-panel {
+    transition: opacity 120ms ease;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .anon-margin-card {
+    transition: none;
+  }
+}
+
+/* --- Tutorial (game-style spotlight walkthrough) --- */
+.anon-tut-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgb(0 0 0 / 0.45);
+  z-index: 99994;
+}
+.anon-tut-ring {
+  outline: 3px solid #fbbf24 !important;
+  outline-offset: 3px;
+  z-index: 99995 !important;
+  position: relative;
+}
+.anon-panel.anon-tut-ring,
+.anon-fab.anon-tut-ring {
+  position: fixed; /* keep their own positioning */
+}
+.anon-tut-popup {
+  position: fixed;
+  z-index: 99996;
+  width: min(340px, calc(100vw - 32px));
+  background: var(--anon-bg);
+  color: var(--anon-ink);
+  border: 1px solid var(--anon-border);
+  border-radius: 10px;
+  box-shadow: 0 8px 30px rgb(0 0 0 / 0.35);
+  padding: 14px 16px;
+}
+.anon-tut-title {
+  font-size: 16px;
+  font-weight: 700;
+  margin: 0 0 6px;
+}
+.anon-tut-text {
+  font-size: 14px;
+  margin: 0 0 10px;
+}
+.anon-tut-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.anon-tut-progress {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--anon-muted);
+}
+
+/* --- Dark mode: match the host site's prefers-color-scheme handling --- */
+@media (prefers-color-scheme: dark) {
+  .anon-root {
+    --anon-ink: #e8eaed;
+    --anon-muted: #a9b1bb;
+    --anon-bg: #1b1f23;
+    --anon-border: #3f4650;
+    --anon-accent: #8ab4f8;
+    --anon-accent-ink: #101418;
+    --anon-danger: #f28b82;
+    --anon-ok: #81c995;
+    --anon-del-bg: #4a1d1d;
+    --anon-ins-bg: #1d3b28;
+  }
+  .anon-root :focus-visible,
+  button.anon-marker:focus-visible {
+    outline-color: #8ab4f8;
+  }
+  .anon-fab {
+    background: #e8eaed;
+    border-color: #e8eaed;
+    color: #101418;
+  }
+  .anon-fab:hover {
+    background: #ffffff;
+  }
+  .anon-btn:hover {
+    background: #262b31;
+  }
+  .anon-btn-primary {
+    color: #101418;
+  }
+  .anon-btn-primary:hover {
+    background: #aecbfa;
+  }
+  .anon-btn-danger:hover {
+    background: #33211f;
+  }
+  .anon-quote,
+  button.anon-quote-click {
+    background: #22262c;
+    color: #e8eaed;
+  }
+  .anon-suggestion {
+    background: #171b1f;
+  }
+  .anon-diff del,
+  .anon-del {
+    color: #f6c6c2;
+  }
+  .anon-diff ins,
+  .anon-ins {
+    color: #bde8c8;
+  }
+  .anon-chip {
+    background: #262b31;
+    color: #d5dae0;
+  }
+  .anon-chip-pending  { background: #3a3110; color: #fde68a; }
+  .anon-chip-approved,
+  .anon-chip-applied  { background: #1d3b28; color: #81c995; }
+  .anon-chip-rejected { background: #4a1d1d; color: #f28b82; }
+  .anon-chip-resolved { background: #26284a; color: #b9bdf7; }
+  mark.anon-highlight {
+    background: #713f12;
+    color: #fef3c7;
+    border-bottom-color: #fbbf24;
+  }
+  mark.anon-highlight.anon-active {
+    background: #92580f;
+    outline-color: #fbbf24;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    @keyframes anon-flash {
+      50% { background: #b45309; }
+    }
+  }
+}
